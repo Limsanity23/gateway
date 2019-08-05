@@ -22,8 +22,7 @@
  */
 package com.bnids.config;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.stereotype.Component;
@@ -33,8 +32,8 @@ import org.springframework.stereotype.Component;
  * @author connect2sys
  */
 @Component
+@Slf4j
 public class UndertowFactoryCustomizer implements WebServerFactoryCustomizer<UndertowServletWebServerFactory> {
-    Logger logger = LogManager.getLogger(UndertowFactoryCustomizer.class);
     @Override
     public void customize(UndertowServletWebServerFactory factory) {
         int ioThreads = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 4;
@@ -61,7 +60,7 @@ public class UndertowFactoryCustomizer implements WebServerFactoryCustomizer<Und
         factory.setAccessLogEnabled(true);
         int finalBufferSize = bufferSize;
         boolean finalDirectBuffers = directBuffers;
-        logger.warn("Undertow Configuration. buffer:{}bytes, directBuffer:{}, ioThreads:{}, workerThreads:{}",
-                ()-> finalBufferSize,()-> finalDirectBuffers,()->ioThreads,()->workerThreads );
+        //log.warn("Undertow Configuration. buffer:{}bytes, directBuffer:{}, ioThreads:{}, workerThreads:{}",
+        //        ()-> finalBufferSize,()-> finalDirectBuffers,()->ioThreads,()->workerThreads );
     }
 }

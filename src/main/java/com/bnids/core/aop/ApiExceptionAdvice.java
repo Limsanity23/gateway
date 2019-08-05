@@ -28,8 +28,7 @@ import com.bnids.core.api.response.ApiResponseCode;
 import com.bnids.exception.CommunicationFailureException;
 import com.bnids.exception.ConnectorClassException;
 import com.bnids.exception.NotFoundException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -44,16 +43,15 @@ import java.net.UnknownHostException;
  * @author shinys
  */
 @ControllerAdvice
+@Slf4j
 public class ApiExceptionAdvice {
-    Logger logger = LogManager.getLogger(ApiExceptionAdvice.class);
-
     @Order(1)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value={NullPointerException.class, ConnectorClassException.class, Exception.class})
     @ResponseBody
     public ApiResponse<String> handleInternalException(RuntimeException e, WebRequest request) {
         ApiResponse<String> exception = ApiResponse.createException(new ApiException(ApiResponseCode.SERVER_ERROR, e));
-        logger.error(e::getMessage, e);
+        log.error(e.getMessage(), e);
         return exception;
     }
 
@@ -63,7 +61,7 @@ public class ApiExceptionAdvice {
     @ResponseBody
     public ApiResponse<String> handleCommunicationException(RuntimeException e, WebRequest request) {
         ApiResponse<String> exception = ApiResponse.createException(new ApiException(ApiResponseCode.COMMUNICATION_FAILURE, e));
-        logger.error(e::getMessage, e);
+        log.error(e.getMessage(), e);
         return exception;
     }
 
@@ -73,7 +71,7 @@ public class ApiExceptionAdvice {
     @ResponseBody
     public ApiResponse<String> handleValidException(RuntimeException e, WebRequest request) {
         ApiResponse<String> exception = ApiResponse.createException(new ApiException(ApiResponseCode.NOT_FOUND, e));
-        logger.warn(e::getMessage, e);
+        log.warn(e.getMessage(), e);
         return exception;
     }
 
