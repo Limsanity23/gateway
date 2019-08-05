@@ -44,12 +44,11 @@ public class LogicPattern extends BaseEntity<Short> {
     @Column
     private Short logicCode;
 
+    @Column
+    private Long registCarId;
+
     @Column(length = 10, nullable = false)
     private String logicPattern;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "regist_car_id")
-    private RegistCar registCar;
 
     @JsonIgnore
     @Override

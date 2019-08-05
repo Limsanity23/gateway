@@ -47,6 +47,9 @@ public class CarAccessLimit extends BaseEntity<Long> {
     @Column
     private Long carAccessLimitId;
 
+    @Column
+    private Long registCarId;
+
     @Column(length = 1000)
     private String dayLimit;
 
@@ -67,19 +70,6 @@ public class CarAccessLimit extends BaseEntity<Long> {
 
     @Column(length = 1, nullable = false)
     private String operationLimitExceptYn;
-
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "regist_car_id", nullable = false)
-    //@MapsId
-    private RegistCar registCar;
-
-    public void setRegistCar(final RegistCar registCar) {
-        //if (this.registCar != null) {
-        //    this.registCar.getCarAccessLimit()
-        //}
-
-        this.registCar = registCar;
-    }
 
     @JsonIgnore
     @Override
