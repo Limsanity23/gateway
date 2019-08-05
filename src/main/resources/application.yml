@@ -1,0 +1,39 @@
+spring:
+  profiles:
+    active: test
+
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+      use-new-id-generator-mappings: false
+
+  jackson:
+    serialization.write-dates-as-timestamps: false
+
+  security:
+    basic:
+      enable: false
+    ignored: /**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    root: info
+    org:
+      hibernate:
+        SQL: DEBUG
+        type: trace
+
+env:
+  servers:
+    local-server: 'http://localhost:12000/api/gateway'
+    signage-interface-server: 'http://localhost:12020/api/signal/transit'
+    gate-control-server: 'http://localhost:12030'
+    push-server: 'http://localhost:12040'
+    homenet-interface-server: 'http://localhost:12050'

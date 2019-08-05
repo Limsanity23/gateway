@@ -1,0 +1,72 @@
+plugins {
+    id 'org.springframework.boot' version '2.1.6.RELEASE'
+    id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.bnids'
+version = '1.0.0-RELEASE'
+sourceCompatibility = '11'
+
+def queryDslVersion = '4.2.1'
+def log4j2Version = '2.12.0'
+def slf4jVersion = '1.7.26'
+def commonsLoggingVersion = '1.2'
+
+
+configurations {
+    // exclude embeded tomcat
+    compile.exclude module: 'spring-boot-starter-tomcat'
+    // exclude logback. for use log4j2 lazy evaluation logger.
+    compile.exclude module: 'spring-boot-starter-logging'
+    
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation('org.springframework.boot:spring-boot-starter-hateoas')
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-undertow'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    implementation "org.cache2k:cache2k-api:1.2.2.Final"
+    implementation "org.cache2k:cache2k-spring:1.2.2.Final"
+    implementation "org.cache2k:cache2k-core:1.2.2.Final"
+
+
+    compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
+
+    compile 'org.apache.logging.log4j:log4j-web:2.12.0'
+    // fix 'illegal reflective access operation has occurred' https://github.com/jboss-javassist/javassist/issues/214  
+    compile 'org.javassist:javassist:3.25.0-GA'
+    // https://mvnrepository.com/artifact/cglib/cglib
+    compile 'cglib:cglib:3.2.12'
+
+
+    //Apache Commons
+    compile('org.apache.commons:commons-lang3:3.8.1')
+
+    // Utils
+    compile('org.modelmapper:modelmapper:2.3.2')
+    
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'mysql:mysql-connector-java'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
