@@ -1,5 +1,5 @@
 server:
-  port: 1028
+  port: 12010
   compression:
     enabled: true
     min-response-size: 256
