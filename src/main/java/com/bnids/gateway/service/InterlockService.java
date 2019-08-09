@@ -92,7 +92,7 @@ public class InterlockService {
                 .subscribe(s-> log.info("Local Server API:{}, params:{}, response:{}",localResponse,localResponse,s));
     }
 
-    public void sendSignageServer(LprRequestDto dto, Integer registItemId) {
+    public void sendSignageServer(LprRequestDto dto, Long registItemId) {
         SignageServerRequestDto signageServerRequestDto = SignageServerRequestDto.builder()
                 .carNo(dto.getCarNo())
                 .gateId(dto.getGateId())

@@ -34,5 +34,5 @@ import lombok.Setter;
 public class SignageServerRequestDto {
     private String carNo;
     private Long gateId;
-    private Integer registItemId;
+    private Long registItemId;
 }
