@@ -29,10 +29,12 @@ import com.bnids.gateway.entity.*;
 import com.bnids.gateway.repository.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.LinkOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -42,6 +44,7 @@ import java.time.LocalTime;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GatewayService {
     @NonNull
     private final SystemSetupRepository systemSetupRepository;
@@ -71,13 +74,18 @@ public class GatewayService {
     private final InterlockService interlockService;
 
     public void interlock(LprRequestDto requestDto) {
+
         Long gateId = requestDto.getGateId();
         Long registCarId = null;
         Integer accuracy = requestDto.getAccuracy();
         String carNo = requestDto.getCarNo();
         String lprCarNo = requestDto.getCarNo();
 
-        Integer logicType = findSystemSetup(1L).getLogicType();
+        log.info("CarNo = {}, gateId = {} 출입 시작",carNo,gateId);
+
+        SystemSetup systemSetup = findSystemSetup(1L);
+        Integer logicType = systemSetup.getLogicType();
+        Integer operationLimitSetup = systemSetup.getOperationLimitSetup();
 
         Gate gate = findGate(gateId);
 
@@ -105,7 +113,7 @@ public class GatewayService {
 
                 if (isTexi(requestDto.getCarNo())) {
                     carSection = 7L;
-                    isAllowPass = isAllowPass(gateId, carSection);
+                    isAllowPass = isAllowPass(carNo, gateId, carSection, operationLimitSetup);
                 } else {
                     RegistCar registCar = findRegistItem(carNo);
 
@@ -120,7 +128,7 @@ public class GatewayService {
                             carSection = 3L;
                             telNo = appVisitCar.getVisitTelNo();
                             visitName = appVisitCar.getVisitorName();
-                            isAllowPass = isAllowPass(gateId, carSection);
+                            isAllowPass = isAllowPass(carNo, gateId, carSection, operationLimitSetup);
                         }
                     } else {
                         registCarId = registCar.getRegistCarId();
@@ -128,7 +136,7 @@ public class GatewayService {
 
                         telNo = registCar.getTelNo();
                         visitName = registCar.getOwnerName();
-                        isAllowPass = isAllowPass(gateId, carSection);
+                        isAllowPass = isAllowPass(carNo, gateId, carSection, operationLimitSetup);
                     }
 
                     if (isAllowPass) {
@@ -144,7 +152,7 @@ public class GatewayService {
                         }
                     } else {
                         // 출입 차단
-                        accessAllowed(requestDto, lprCarNo, gateType, carSection, telNo, visitName);
+                        accessBlocked(requestDto, lprCarNo, gateType, carSection, telNo, visitName);
                     }
                 }
             } else {
@@ -224,8 +232,8 @@ public class GatewayService {
      * @param registItemId
      * @return
      */
-    private boolean isAllowPass(Long gateId, Long registItemId) {
-        return isGateItemTransitCar(gateId, registItemId) && !isCarAccessLimit(registItemId);
+    private boolean isAllowPass(String carrNo, Long gateId, Long registItemId, Integer operationLimitSetup) {
+        return isGateItemTransitCar(gateId, registItemId) && !isCarAccessLimit(carNo, registItemId, operationLimitSetup);
     }
 
 
@@ -253,14 +261,14 @@ public class GatewayService {
      * @param resistCarId
      * @return
      */
-    private boolean isCarAccessLimit(final Long registCarId) {
+    private boolean isCarAccessLimit(String carNo, final Long registCarId, Integer operationLimitSetup) {
         return carAccessLimitRepository.findByRegistCarId(registCarId)
                 .map(carAccessLimit -> {
                     LocalDateTime currentTime = LocalDateTime.now();
 
                     // 요일제한
                     if (carAccessLimit.getDayLimit() != null) {
-                       String[] dayLimits = StringUtils.split(carAccessLimit.getDayLimit(), ",");
+                        String[] dayLimits = StringUtils.split(carAccessLimit.getDayLimit(), ",");
 
                         for (String dayLimit : dayLimits) {
                             if (currentTime.getDayOfWeek().getValue() == NumberUtils.toInt(dayLimit)) {
@@ -281,8 +289,8 @@ public class GatewayService {
                     }
 
                     //제한 일자
-                    if (currentTime.isAfter(carAccessLimit.getLimitBeginDate().atTime(0,1))
-                            && currentTime.isBefore(carAccessLimit.getLimitEndDate().atTime(23,59))) {
+                    if (currentTime.isAfter(carAccessLimit.getLimitBeginDate().atTime(0, 1))
+                            && currentTime.isBefore(carAccessLimit.getLimitEndDate().atTime(23, 59))) {
                         return true;
                     }
 
@@ -295,9 +303,83 @@ public class GatewayService {
                     if (limitBeginTime.isAfter(limitEndTime)) {
                         endDateTime = endDateTime.plusDays(1);
                     }
-                    if ( (currentTime.isAfter(beginDateTime) ||  currentTime.isEqual(beginDateTime) )
-                            && (currentTime.isBefore(endDateTime) || currentTime.isEqual(endDateTime)) ) {
+                    if ((currentTime.isAfter(beginDateTime) || currentTime.isEqual(beginDateTime))
+                            && (currentTime.isBefore(endDateTime) || currentTime.isEqual(endDateTime))) {
                         return true;
+                    }
+
+                    // 부제 운행
+                    if (operationLimitSetup > 0) {
+                        if ("N".equals(carAccessLimit.getOperationLimitExceptYn())) {
+                            String digit = carNo.replaceAll("[^0-9]", "");
+                            int postfix = NumberUtils.toInt(StringUtils.right(digit, 1));
+                            int prefix = NumberUtils.toInt(StringUtils.left(digit, 2));
+
+                            // 승합, 외교, 군용 제외
+                            if (prefix < 70 &&ax
+                                    !(carNo.contains("외") || carNo.contains("영") || carNo.contains("-")) &&
+                                    !(carNo.contains("합") || carNo.contains("육") || carNo.contains("해") || carNo.contains("공"))) {
+
+                                if (operationLimitSetup == 5) { // 5부제
+                                    int dayOfWeek = LocalDateTime.now().getDayOfWeek().getValue();
+
+                                    if ((dayOfWeek == postfix) || ((dayOfWeek + 5) == postfix)) {
+                                        return true;
+                                    }
+
+                                    /*
+                                    switch (LocalDateTime.now().getDayOfWeek().getValue()) {
+                                        case 1: //월요일
+                                            if (postfix == 1 || postfix == 6) {
+                                                return true;
+                                            }
+                                            break;
+
+                                        case 2:
+                                            if (postfix == 2 || postfix == 7) {
+                                                return true;
+                                            }
+                                            break;
+
+                                        case 3:
+
+                                            if (postfix == 3 || postfix == 8) {
+                                                return true;
+                                            }
+                                            break;
+
+                                        case 4:
+
+                                            if (postfix == 4 || postfix == 9) {
+                                                return true;
+                                            }
+                                            break;
+
+                                        case 5: // 금요일
+                                            if (postfix == 0 || postfix == 5) {
+                                                return true;
+                                            }
+                                            break;
+                                    }
+                                    */
+
+                                } else {
+                                    int day = LocalDateTime.now().getDayOfMonth();
+                                    if (day < 30) { // 31일은 부제 적용 예외
+                                        if (operationLimitSetup == 2) { // 2부제
+                                            if ((day % 2) != (postfix % 2)) { // positive 채택
+                                                return true;
+                                            }
+
+                                        } else if (operationLimitSetup == 10) {
+                                            if ((day % 10) == postfix) {
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     return false;

@@ -20,21 +20,23 @@
  *
  *    For more information on this product, please see www.bnids.com
  */
-package com.bnids.gateway.dto;
 
-import lombok.Builder;
+package com.bnids.config;
+
+import com.bnids.core.annotations.Comment;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
-/**
- * @author yannishin
- */
-@Setter @Getter
-@NoArgsConstructor
-public class LprRequestDto {
-    private String carNo;
-    private Integer accuracy;
-    private String carImage;
-    private Long gateId;
+@Configuration
+@ConfigurationProperties(prefix="bnids-app.servers")
+@Getter @Setter
+public class AppSetting {
+    private String localServer;
+    private String signageInterfaceServer;
+    private String gateControlServer;
+    private String pushServer;
+    private String homenetInterfaceServer;
 }

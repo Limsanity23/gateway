@@ -51,8 +51,11 @@ public class AppVisitCar extends AuditModel<Long> {
     @Column(nullable = false)
     private int appUserId;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 20)
     private String visitCarNo;
+
+    @Column(length = 10)
+    private String digitCarNo;
 
     @Column(nullable = false, length = 100)
     private String visitorName;

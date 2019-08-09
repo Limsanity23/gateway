@@ -54,6 +54,9 @@ public class RegistCar extends AuditModel<Long> {
     @Column(length = 20, nullable = false, unique = true)
     private String carNo;
 
+    @Column(length = 10)
+    private String digitCarNo;
+
     @Column
     private Integer appUserId;
 

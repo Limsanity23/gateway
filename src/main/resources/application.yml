@@ -30,10 +30,10 @@ logging:
         SQL: DEBUG
         type: trace
 
-env:
+bnids-app:
   servers:
-    local-server: 'http://localhost:12000/api/gateway'
+    localServer: 'http://localhost:12000/api/gateway'
     signage-interface-server: 'http://localhost:12020/api/signal/transit'
-    gate-control-server: 'http://localhost:12030'
+    gateControlServer: 'http://localhost:12030'
     push-server: 'http://localhost:12040'
     homenet-interface-server: 'http://localhost:12050'

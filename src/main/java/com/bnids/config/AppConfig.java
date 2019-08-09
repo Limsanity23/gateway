@@ -97,7 +97,6 @@ public class AppConfig {
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)));
     }
 
-
     @Bean
     public WebClient webClient() {
         TcpClient timeoutClient = TcpClient.create()

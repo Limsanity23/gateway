@@ -27,7 +27,7 @@ import com.bnids.gateway.dto.InterlockResponseDto;
 import com.bnids.gateway.dto.LocalServerRequestDto;
 import com.bnids.gateway.dto.LprRequestDto;
 import com.bnids.gateway.dto.SignageServerRequestDto;
-import com.bnids.property.AppSetting;
+import com.bnids.config.AppSetting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +55,7 @@ public class InterlockService {
                 .uri(gateServer+"/{gateId}", gateId)
                 .retrieve()
                 .bodyToMono(InterlockResponseDto.class);
+
         gateResponse
                 .doOnError(t-> log.error("Gate Server API:{}, params:{}",gateServer,gateId,t))
                 .subscribe(s-> log.info("Gate Server API:{}, params:{}, response:{}",gateServer,gateId,s));
@@ -87,7 +88,7 @@ public class InterlockService {
                 .bodyToMono(InterlockResponseDto.class);
 
         localResponse
-                .doOnError(t-> log.error("Local Server API:{}, params:{}",localServer,localServerRequestDto,t))
+                .doOnError(t->log.error("Local Server API:{}, params:{}",localServer,localServerRequestDto, t))
                 .subscribe(s-> log.info("Local Server API:{}, params:{}, response:{}",localResponse,localResponse,s));
     }
 
@@ -107,11 +108,7 @@ public class InterlockService {
                 .bodyToMono(InterlockResponseDto.class);
 
         signageResponse
-                .doOnError(t->{
-                    log.error("Signage Server API:{}, params:{}",signageInterfaceServer,signageServerRequestDto,t);
-                })
-                .subscribe(s->{
-                    log.info("Signage Server API:{}, params:{}, response:{}",signageInterfaceServer,signageServerRequestDto,s);
-                });
+                .doOnError(t->log.error("Signage Server API:{}, params:{}",signageInterfaceServer,signageServerRequestDto,t))
+                .subscribe(s->log.info("Signage Server API:{}, params:{}, response:{}",signageInterfaceServer,signageServerRequestDto,s));
     }
 }

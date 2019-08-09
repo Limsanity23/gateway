@@ -27,7 +27,7 @@ package com.bnids.exception;
  */
 public class CommunicationFailureException extends RuntimeException {
     public CommunicationFailureException(){
-        super("컨트롤러와 통신 오류");
+        super("통신 오류");
     }
     public CommunicationFailureException(String msg){
         super(msg);

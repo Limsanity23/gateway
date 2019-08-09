@@ -52,6 +52,9 @@ public class WarningCar extends AuditModel<Long> {
     @Column(length = 20, nullable = false)
     private String carNo;
 
+    @Column(length = 10)
+    private String digitCarNo;
+
     @Column(length = 100)
     private String carKind;
 

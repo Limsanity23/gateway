@@ -31,18 +31,18 @@ import com.bnids.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.util.NestedServletException;
 
 import java.net.UnknownHostException;
 
 /**
- * @author shinys
+ * @author yannishin
  */
-@ControllerAdvice
+@Order(1)
+@RestControllerAdvice
+//@RestController
 @Slf4j
 public class ApiExceptionAdvice {
     @Order(1)
@@ -67,7 +67,7 @@ public class ApiExceptionAdvice {
 
     @Order(3)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value={NotFoundException.class})
+    @ExceptionHandler(value={NotFoundException.class, NestedServletException.class})
     @ResponseBody
     public ApiResponse<String> handleValidException(RuntimeException e, WebRequest request) {
         ApiResponse<String> exception = ApiResponse.createException(new ApiException(ApiResponseCode.NOT_FOUND, e));
