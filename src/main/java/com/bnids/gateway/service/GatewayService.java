@@ -34,10 +34,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.LinkOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * @author yannishin
@@ -113,9 +115,11 @@ public class GatewayService {
 
                 if (isTexi(requestDto.getCarNo())) {
                     carSection = 7L;
-                    isAllowPass = isAllowPass(carNo, registCarId, gateId, carSection, logicType, operationLimitSetup);
+                    if (isAllowPass(carNo, registCarId, gateId, carSection, logicType, operationLimitSetup))
+                        isAllowPass = true;
+                    else isAllowPass = false;
                 } else {
-                    RegistCar registCar = findRegistItem(carNo);
+                    RegistCar registCar = findRegistCar(carNo);
 
                     if (registCar == null) {
                         // 에약 방문 차량 조회
@@ -128,7 +132,9 @@ public class GatewayService {
                             carSection = 3L;
                             telNo = appVisitCar.getVisitTelNo();
                             visitName = appVisitCar.getVisitorName();
-                            isAllowPass = isAllowPass(carNo, registCarId, gateId, carSection, logicType, operationLimitSetup);
+                            if (isAllowPass(carNo, registCarId, gateId, carSection, logicType, operationLimitSetup))
+                                isAllowPass = true;
+                            else isAllowPass = false;
                         }
                     } else {
                         registCarId = registCar.getRegistCarId();
@@ -136,7 +142,9 @@ public class GatewayService {
 
                         telNo = registCar.getTelNo();
                         visitName = registCar.getOwnerName();
-                        isAllowPass = isAllowPass(carNo, registCarId, gateId, carSection, logicType, operationLimitSetup);
+                        if (isAllowPass(carNo, registCarId, gateId, carSection, logicType, operationLimitSetup))
+                            isAllowPass = true;
+                        else isAllowPass = false;
                     }
 
                     if (isAllowPass) {
@@ -156,7 +164,7 @@ public class GatewayService {
                     }
                 }
             } else {
-                RegistCar registCar = findRegistItem(carNo);
+                RegistCar registCar = findRegistCar(carNo);
 
                 if (registCar == null) {
                     carSection = 2L;
@@ -171,7 +179,7 @@ public class GatewayService {
                     boolean isOperationLimit = isCarAccessLimit(carNo, registCarId, logicType, operationLimitSetup);
                     boolean isWarningCar = isWarningCar(carNo);
 
-                    if (isWarningCar) {
+                    if (!isOperationLimit && isWarningCar) {
                         carSection = 6L;
                         accessBlocked(requestDto, lprCarNo, gateType, carSection, telNo, visitName);
                     } else {
@@ -185,9 +193,17 @@ public class GatewayService {
     }
 
     /**
-     *
-     * @param systemSetupId
-     * @return
+     * 시스템 설정정보 조회
+     * @return 시스템 설정
+     */
+    private SystemSetup findSystemSetup() {
+        return findSystemSetup(1L);
+    }
+
+    /**
+     * 시스템 설정정보 조회
+     * @param systemSetupId 시스템 설정 고유 번호
+     * @return 시스템 설정
      */
     private SystemSetup findSystemSetup(Long systemSetupId) {
         return systemSetupRepository.findById(systemSetupId)
@@ -195,32 +211,53 @@ public class GatewayService {
     }
 
     /**
-     *
-     * @param gateId
-     * @return
+     * 통로가 조회
+     * @param gateId 통로고유번호
+     * @return 통로
      */
     private Gate findGate(Long gateId) {
         return gateRepository.findById(gateId)
-                .orElseThrow(() -> new NotFoundException(String.format("통로 존재하지 않습니다.[gateId:%d]",1L)));
+                .orElseThrow(() -> new NotFoundException(String.format("통로가  존재하지 않습니다.[gateId:%d]",1L)));
     }
 
     /**
-     * 등록 차량 여부
+     * 등록 차량 정보
      *
-     * @param carNo
-     * @return
+     * @param carNo 차량번호
+     * @return 등록차량
      */
-    private RegistCar findRegistItem(String carNo) {
-        // @todo 로직 적용
+    private RegistCar findRegistCar(String carNo) {
         return registCarRepository.findByCarNo(carNo);
+    }
 
+    /**
+     * 등록 차량 정보
+     *
+     * @param carNo 차량번호
+     * @return 등록차량
+     */
+    private RegistCar findRegistCarByDigitCarNo(String carNo) {
+        String digitCarNo = digirCarNo(carNo);
+        Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWith(digitCarNo);
+
+        if(registCarStream.count() == 1) { // 결과가 1개이면
+            return registCarStream.findFirst().get();
+        } else { // 결과가 2개 이상
+            Stream<RegistCar> stream = registCarStream.filter(registCar -> carNo.equals(registCar.getCarNo()));
+
+            if (stream.count() == 0) { // 완전히 일차하는 차량이 없을 경우
+                return registCarStream.findFirst().get();
+            } else { // 완전히 일차하는 차량이 존재
+                return stream.findFirst().get();
+            }
+        }
     }
 
     /**
      * 앱 방문 차량
      *
-     * @param carNo
-     * @return
+     * @param carNo 차량번호
+     * @return 앱 방문 차량
      */
     private AppVisitCar findAppVisitCar(String carNo) {
         LocalDateTime today = LocalDateTime.now();
@@ -229,9 +266,9 @@ public class GatewayService {
 
     /**
      * 차량통과 여부(통로별 통과 + 차량툴입제한)
-     * @param gateId
-     * @param registItemId
-     * @return
+     * @param gateId 통로고유번호
+     * @param registItemId 등록할목고유번호
+     * @return 차량통과 여부
      */
     private boolean isAllowPass(String carNo, Long registCarId, Long gateId, Long registItemId, Integer logicType, Integer operationLimitSetup) {
         return isGateItemTransitCar(gateId, registItemId) && !isCarAccessLimit(carNo, registCarId, logicType, operationLimitSetup);
@@ -241,9 +278,9 @@ public class GatewayService {
     /**
      * 통로별 통과 야부
      *
-     * @param gateId
-     * @param registItemId
-     * @return
+     * @param gateId 통로고유번호
+     * @param registItemId 등록할목고유번호
+     * @return 통로별 통과 야부
      */
     private boolean isGateItemTransitCar(final Long gateId, final Long registItemId) {
         return  gateItemTransitCarRepository.findByGateIdAndRegistItemId(gateId, registItemId)
@@ -258,10 +295,10 @@ public class GatewayService {
     /**
      * 차량 출입 제한
      *
-     * @param carNo
-     * @param registCarId
-     * @param logicType
-     * @param operationLimitSetup
+     * @param carNo 차량번호
+     * @param registCarId 등록항목고유번호
+     * @param logicType 로직유형
+     * @param operationLimitSetup 운핼제한 설정
      * @return
      */
     private boolean isCarAccessLimit(String carNo, final Long registCarId, Integer logicType, Integer operationLimitSetup) {
@@ -316,7 +353,7 @@ public class GatewayService {
                     // 부제 운행
                     if (operationLimitSetup > 0) {
                         if ("N".equals(carAccessLimit.getOperationLimitExceptYn())) {
-                            String digit = carNo.replaceAll("[^0-9]", "");
+                            String digit = digirCarNo(carNo);
                             int postfix = NumberUtils.toInt(StringUtils.right(digit, 1));
                             int prefix = NumberUtils.toInt(StringUtils.left(digit, 2));
 
@@ -391,6 +428,11 @@ public class GatewayService {
                 }).orElse(false);
     }
 
+    /**
+     * 경고차량 여부
+     * @param carNo 차량번호
+     * @return 경고차량 여부
+     */
     private boolean isWarningCar(String carNo) {
         return warningCarRepository.existsByCarNo(carNo);
     }
@@ -398,10 +440,10 @@ public class GatewayService {
     /**
      * 출입 허용
      *
-     * @param dto
-     * @param lprCarNo
-     * @param gateType
-     * @param carSection
+     * @param dto 인식엔진에서 전달 받은 테이터
+     * @param lprCarNo 차량번호
+     * @param gateType 통로유형
+     * @param carSection 차령구분
      */
     private void accessAllowed(LprRequestDto dto, String lprCarNo, Integer gateType, Long carSection) {
         accessAllowed(dto, lprCarNo, gateType, carSection, "", "");
@@ -411,12 +453,12 @@ public class GatewayService {
     /**
      * 출입 허용
      *
-     * @param dto
-     * @param lprCarNo
-     * @param gateType
-     * @param carSection
-     * @param telNo
-     * @param visitPlaceName
+     * @param dto 인식엔진에서 전달 받은 테이터
+     * @param lprCarNo 차량번호
+     * @param gateType 통로유형
+     * @param carSection 차령구분
+     * @param telNo 전화번호
+     * @param visitPlaceName 방문처명
      */
     private void accessAllowed(LprRequestDto dto, String lprCarNo, Integer gateType, Long carSection, String telNo, String visitPlaceName) {
         interlockService.sendGateServer(dto.getGateId());
@@ -427,10 +469,10 @@ public class GatewayService {
     /**
      * 충입 차단
      *
-     * @param dto
-     * @param lprCarNo
-     * @param gateType
-     * @param carSection
+     * @param dto 인식엔진에서 전달 받은 테이터
+     * @param lprCarNo 차량번호
+     * @param gateType 통로유형
+     * @param carSection 차령구분
      */
     private void accessBlocked(LprRequestDto dto, String lprCarNo, Integer gateType, Long carSection) {
         accessBlocked(dto, lprCarNo, gateType, carSection, "", "");
@@ -439,12 +481,12 @@ public class GatewayService {
     /**
      * 출입 차단
      *
-     * @param dto
-     * @param lprCarNo
-     * @param gateType
-     * @param carSection
-     * @param telNo
-     * @param visitPlaceName
+     * @param dto 인식엔진에서 전달 받은 테이터
+     * @param lprCarNo 차량번호
+     * @param gateType 통로유형
+     * @param carSection 차령구분
+     * @param telNo 전화번호
+     * @param visitPlaceName 방문처명
      */
     private void accessBlocked(LprRequestDto dto, String lprCarNo, Integer gateType, Long carSection, String telNo, String visitPlaceName) {
         interlockService.sendSignageServer(dto, carSection);
@@ -453,8 +495,8 @@ public class GatewayService {
 
     /**
      * 택시 여부
-     * @param carNo
-     * @return
+     * @param carNo 차량번호
+     * @return 택시 여부
      */
     private boolean isTexi(String carNo) {
         String[] symbols = {"바", "사", "아", "자"};
@@ -480,6 +522,10 @@ public class GatewayService {
         }
 
         return isTaxi;
+    }
+
+    private String digirCarNo(String carNo) {
+        return carNo.replaceAll("[^0-9]", "");
     }
 
 }

@@ -28,12 +28,14 @@ package com.bnids.gateway.repository;
 import com.bnids.core.base.BaseJPARepository;
 import com.bnids.gateway.entity.RegistCar;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * @author yannishin
  */
 public interface RegistCarRepository extends BaseJPARepository<RegistCar, Long> {
     RegistCar findByCarNo(String carNo);
-    //boolean existsByCarNo(String carNo);
+    Stream<RegistCar> findByDigitCarNoEndsWith(String digitCarNo);
 }
