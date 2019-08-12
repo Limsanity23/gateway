@@ -23,10 +23,7 @@
 
 package com.bnids.gateway.service;
 
-import com.bnids.gateway.dto.InterlockResponseDto;
-import com.bnids.gateway.dto.LocalServerRequestDto;
-import com.bnids.gateway.dto.LprRequestDto;
-import com.bnids.gateway.dto.SignageServerRequestDto;
+import com.bnids.gateway.dto.*;
 import com.bnids.config.AppSetting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -48,34 +45,49 @@ public class InterlockService {
     @NonNull
     private final WebClient webClient;
 
-    public void sendGateServer(Long gateId) {
-        String gateServer = appSetting.getGateControlServer();
+    /**
+     *  전광판 콘트롤러 연동 서버에 차량정보 전송
+     *  인터페이스 ID PCLPR0002
+     *
+     * @param dto 연동요청 Dto
+     */
+    public void sendSignageServer(InterlockRequestDto dto) {
+        SignageServerRequestDto signageServerRequestDto = SignageServerRequestDto.builder()
+                .carNo(dto.getCarNo())
+                .gateId(dto.getGateId())
+                .registItemId(dto.getCarSection())
+                .build();
 
-        Mono<InterlockResponseDto> gateResponse  = webClient.get()
-                .uri(gateServer+"/{gateId}", gateId)
+        String signageInterfaceServer = appSetting.getSignageInterfaceServer();
+
+        Mono<InterlockResponseDto> signageResponse  = webClient.post()
+                .uri(signageInterfaceServer)
+                .syncBody(signageServerRequestDto)
                 .retrieve()
                 .bodyToMono(InterlockResponseDto.class);
 
-        gateResponse
-                .doOnError(t-> log.error("Gate Server API:{}, params:{}",gateServer,gateId,t))
-                .subscribe(s-> log.info("Gate Server API:{}, params:{}, response:{}",gateServer,gateId,s));
+        signageResponse
+                .doOnError(t->log.error("Signage Server API:{}, params:{}",signageInterfaceServer,signageServerRequestDto,t))
+                .subscribe(s->log.info("Signage Server API:{}, params:{}, response:{}",signageInterfaceServer,signageServerRequestDto,s));
     }
 
-    public void sendLocalServer(LprRequestDto dto, String lprCarNo, Integer gateType, Long carSection, Integer gateStatus) {
-        sendLocalServer(dto, lprCarNo, gateType, carSection, gateStatus, "", "");
-    }
-
-    public void sendLocalServer(LprRequestDto dto, String lprCarNo, Integer gateType, Long carSection, Integer gateStatus, String telNo, String visitPlaceName) {
+    /**
+     *  로컬 서버에 차량정보 전송
+     *  인터페이스 ID PCLPR0003
+     *
+     * @param dto 연동요청 Dto
+     */
+    public void sendLocalServer(InterlockRequestDto dto) {
         LocalServerRequestDto localServerRequestDto = LocalServerRequestDto.builder()
                 .carNo(dto.getCarNo())
-                .lprCarNo(lprCarNo)
+                .lprCarNo(dto.getLprCarNo())
                 .gateId(dto.getGateId())
-                .gateType(gateType)
-                .carSection(carSection)
-                .gateStatus(gateStatus)
+                .gateType(dto.getGateType())
+                .carSection(dto.getCarSection())
+                .gateStatus(dto.getGateStatus())
                 .carImage(dto.getCarImage())
-                .telNo(telNo)
-                .visitPlaceName(visitPlaceName)
+                .telNo(dto.getTelNo())
+                .visitPlaceName(dto.getVisitName())
                 .build();
 
         String localServer = appSetting.getLocalServer();
@@ -92,23 +104,22 @@ public class InterlockService {
                 .subscribe(s-> log.info("Local Server API:{}, params:{}, response:{}",localResponse,localResponse,s));
     }
 
-    public void sendSignageServer(LprRequestDto dto, Long registItemId) {
-        SignageServerRequestDto signageServerRequestDto = SignageServerRequestDto.builder()
-                .carNo(dto.getCarNo())
-                .gateId(dto.getGateId())
-                .registItemId(registItemId)
-                .build();
+    /**
+     *  차단기 연동 서버에 차량정보 전송
+     *  인터페이스 ID PCLPR0004
+     *
+     * @param dto 연동요청 Dto
+     */
+    public void sendGateServer(Long gateId) {
+        String gateServer = appSetting.getGateControlServer();
 
-        String signageInterfaceServer = appSetting.getSignageInterfaceServer();
-
-        Mono<InterlockResponseDto> signageResponse  = webClient.post()
-                .uri(signageInterfaceServer)
-                .syncBody(signageServerRequestDto)
+        Mono<InterlockResponseDto> gateResponse  = webClient.get()
+                .uri(gateServer+"/{gateId}", gateId)
                 .retrieve()
                 .bodyToMono(InterlockResponseDto.class);
 
-        signageResponse
-                .doOnError(t->log.error("Signage Server API:{}, params:{}",signageInterfaceServer,signageServerRequestDto,t))
-                .subscribe(s->log.info("Signage Server API:{}, params:{}, response:{}",signageInterfaceServer,signageServerRequestDto,s));
+        gateResponse
+                .doOnError(t-> log.error("Gate Server API:{}, params:{}",gateServer,gateId,t))
+                .subscribe(s-> log.info("Gate Server API:{}, params:{}, response:{}",gateServer,gateId,s));
     }
 }

@@ -24,18 +24,28 @@ package com.bnids.gateway.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
  * @author yannishin
  */
 @Setter @Getter
-@NoArgsConstructor
-public class LprRequestDto {
+@Builder
+public class InterlockRequestDto {
+    private String carNo;
     private String lprCarNo;
-    private Integer accuracy;
-    private String carImage;
+    private Long registCarId;
+    private Long carSection;
     private Long gateId;
+    private String gateName;
+    private Integer gateType;
+    private Integer gateStatus;
+    private String carImage;
     private Integer plateType;
+    private String telNo;
+    private String visitName;
+    private String addressDong;
+    private String addressHo;
+    private String noticeSetup;
 }
+
