@@ -1,14 +1,8 @@
-server:
-  port: 12010
-  compression:
-    enabled: true
-    min-response-size: 256
-
 spring:
   datasource:
-    url: jdbc:mariadb://localhost/localdb?useUnicode=true&characterEncoding=utf8
-    username: root
-    password: bnids0707
+    url: jdbc:mariadb://db.local.happyparking.co.kr /local_db?useUnicode=true&characterEncoding=utf8
+    username: bnids
+    password: qlqp@2020
     sql-script-encoding: UTF-8
     dbcp2:
       driver-class-name: org.mariadb.jdbc.Driver

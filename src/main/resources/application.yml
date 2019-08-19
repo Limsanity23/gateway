@@ -1,7 +1,12 @@
-spring:
+server:
+  port: 12010
+  compression:
+    enabled: true
+    min-response-size: 256
   profiles:
-    active: dev
-
+    activate: dev
+  servlet:
+    context-path: gateway
   jpa:
     hibernate:
       naming:
@@ -32,8 +37,8 @@ logging:
 
 bnids-app:
   servers:
-    localServer: 'http://localhost:12000/api/gateway'
-    signage-interface-server: 'http://localhost:12020/api/signal/transit'
-    gateControlServer: 'http://localhost:12030'
-    push-server: 'http://localhost:12040'
-    homenet-interface-server: 'http://localhost:12050'
+    localServer: 'http://api.local.happyparking.co.kr/api/gateway'
+    signage-interface-server: 'http://signage.local.happyparking.co.kr/api/signal/transit'
+    gateControlServer: 'http://gate.local.happyparking.co.kr'
+    push-server: 'http://push.happyparking.co.kr'
+    homenet-interface-server: 'http://homenet.local.happyparking.co.kr'
