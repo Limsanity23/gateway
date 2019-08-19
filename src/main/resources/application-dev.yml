@@ -1,21 +1,15 @@
 spring:
   datasource:
-    url: jdbc:mariadb://db.local.happyparking.co.kr /local_db?useUnicode=true&characterEncoding=utf8
-    username: bnids
-    password: qlqp@2020
-    sql-script-encoding: UTF-8
-    dbcp2:
+    hikari: #https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby
+      url: jdbc:mariadb://db.local.happyparking.co.kr/local_db?useUnicode=true&characterEncoding=utf8
+      username: bnids
+      password: qlqp@2020e
       driver-class-name: org.mariadb.jdbc.Driver
-      hikari:
-        jdbc-url: jdbc:h2:mem:localdb
-        driver-class-name: org.h2.Driver
-        username: sa
-        password:
-        connectionTimeout: 30000
-        idleTimeout: 300000
-        maxLifetime: 1200000
-        minimumIdle: 10
-        maximumPoolSize: 15
+      connectionTimeout: 30000
+      idleTimeout: 600000
+      maxLifetime: 1800000
+      minimumIdle: 40
+      maximumPoolSize: 40
   jpa:
     database: mysql
     show-sql: false
