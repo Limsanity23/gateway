@@ -1,0 +1,39 @@
+server:
+  port: 12010
+  compression:
+    enabled: true
+    min-response-size: 256
+
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost/localdb?useUnicode=true&characterEncoding=utf8
+    username: root
+    password: bnids0707
+    sql-script-encoding: UTF-8
+    dbcp2:
+      driver-class-name: org.mariadb.jdbc.Driver
+      hikari:
+        jdbc-url: jdbc:h2:mem:localdb
+        driver-class-name: org.h2.Driver
+        username: sa
+        password:
+        connectionTimeout: 30000
+        idleTimeout: 300000
+        maxLifetime: 1200000
+        minimumIdle: 10
+        maximumPoolSize: 15
+  jpa:
+    database: mysql
+    show-sql: false
+    generate-ddl: false
+
+    hibernate:
+      ddl-auto: none
+
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+  h2:
+    console:
+      enabled: false
