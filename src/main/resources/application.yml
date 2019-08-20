@@ -6,7 +6,7 @@ server:
   profiles:
     activate: dev
   servlet:
-    context-path: gateway
+    context-path: /gateway
   jpa:
     hibernate:
       naming:
