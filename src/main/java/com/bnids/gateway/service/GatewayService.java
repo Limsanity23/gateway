@@ -110,15 +110,15 @@ public class GatewayService {
             if (transitMode == 1) { // 획인후 통과
 
                 boolean isAllowPass = false;
-                long taxiType = getTaxiType(carNo);
+                RegistCar registCar = findRegistCar(carNo, logicType);
 
-                if (taxiType > 0) {
-                    requestDto.setCarSection(taxiType);
-                    isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
-                } else {
-                    RegistCar registCar = findRegistCar(carNo, logicType);
+                if (registCar == null) {
+                    long taxiType = getTaxiType(carNo);
 
-                    if (registCar == null) {
+                    if (taxiType > 0) {
+                        requestDto.setCarSection(taxiType);
+                        isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
+                    } else {
                         // 에약 방문 차량 조회
                         LocalDateTime currentTime = LocalDateTime.now();
                         AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(carNo, currentTime, currentTime);
@@ -132,15 +132,16 @@ public class GatewayService {
 
                             isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                         }
-                    } else {
-                        requestDto.setRegistCarId(registCar.getRegistCarId());
-                        requestDto.setCarSection(registCar.getRegistItem());
-                        requestDto.setTelNo(registCar.getTelNo());
-                        requestDto.setVisitName(registCar.getOwnerName());
-
-                        isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                     }
+                } else {
+                    requestDto.setRegistCarId(registCar.getRegistCarId());
+                    requestDto.setCarSection(registCar.getRegistItem());
+                    requestDto.setTelNo(registCar.getTelNo());
+                    requestDto.setVisitName(registCar.getOwnerName());
+
+                    isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                 }
+
 
                 if (isAllowPass) {
                     boolean isWarningCar = isWarningCar(carNo);
@@ -223,11 +224,12 @@ public class GatewayService {
      * @return 등록차량
      */
     private RegistCar findRegistCar(String carNo, Integer logicType) {
+        LocalDateTime now = LocalDateTime.now();
         if (logicType == 99) {
             log.info("등록 차량 조회 carNo = {}",carNo);
-            return registCarRepository.findByCarNo(carNo);
+            return registCarRepository.findByCarNoAndAprvlStatusAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(carNo, 1, now, now);
         } else {
-            return findRegistCarByDigitCarNo(carNo);
+            return findRegistCarByDigitCarNo(carNo, now);
         }
     }
 
@@ -237,10 +239,10 @@ public class GatewayService {
      * @param carNo 차량번호
      * @return 등록차량
      */
-    private RegistCar findRegistCarByDigitCarNo(String carNo) {
+    private RegistCar findRegistCarByDigitCarNo(String carNo, LocalDateTime now) {
         String digitCarNo = digitCarNo(carNo);
         log.info("{}({}) 등록차량조회", carNo, digitCarNo);
-        Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWith(digitCarNo);
+        Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(digitCarNo,1, now, now);
 
         if(registCarStream.count() == 1) { // 결과가 1개이면
             return registCarStream.findFirst().get();

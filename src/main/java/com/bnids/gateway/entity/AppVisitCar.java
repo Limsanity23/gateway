@@ -60,7 +60,7 @@ public class AppVisitCar extends AuditModel<Long> {
     @Column(nullable = false, length = 100)
     private String visitorName;
 
-    @Column(length = 20)
+    @Column(length = 20, name = "visitor_tel_no")
     private String visitTelNo;
 
     @Column(nullable = false)

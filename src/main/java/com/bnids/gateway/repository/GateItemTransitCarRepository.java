@@ -34,5 +34,6 @@ import java.util.Optional;
  */
 public interface GateItemTransitCarRepository extends BaseJPARepository<GateItemTransitCar, Long> {
     //@Query("select u from GateItemTransitCar u where u.gateId=:gateId and u.registItemId=:registItemId order by u.gateId asc")
-    Optional<GateItemTransitCar> findByGateIdAndRegistItemId(@Param("gateId") Long gateId, @Param("registItemId") Long registItemId);
+    Optional<GateItemTransitCar> findByGateIdAndRegistItemId(Long gateId, Long registItemId);
+    Optional<GateItemTransitCar> findByGateId(@Param("gateId") Long gateId);
 }

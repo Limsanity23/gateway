@@ -28,6 +28,7 @@ package com.bnids.gateway.repository;
 import com.bnids.core.base.BaseJPARepository;
 import com.bnids.gateway.entity.RegistCar;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -36,6 +37,8 @@ import java.util.stream.Stream;
  * @author yannishin
  */
 public interface RegistCarRepository extends BaseJPARepository<RegistCar, Long> {
-    RegistCar findByCarNo(String carNo);
-    Stream<RegistCar> findByDigitCarNoEndsWith(String digitCarNo);
+    RegistCar findByCarNoAndAprvlStatusAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(
+            String carNo, Integer aprvStatus, LocalDateTime start, LocalDateTime finish);
+    Stream<RegistCar> findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(
+            String digitCarNo,Integer aprvStatus, LocalDateTime start, LocalDateTime finish);
 }
