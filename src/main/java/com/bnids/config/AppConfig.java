@@ -93,7 +93,7 @@ public class AppConfig {
                         .addHandlerLast(new WriteTimeoutHandler(3)));
 
         return webClientBuilder -> webClientBuilder
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8.getType())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)));
     }
 
@@ -107,7 +107,7 @@ public class AppConfig {
                                 .addHandlerLast(new WriteTimeoutHandler(3)));
 
         return WebClient.builder()
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8.getType())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)))
                 .build();
     }
