@@ -3,10 +3,12 @@ server:
   compression:
     enabled: true
     min-response-size: 256
-  profiles:
-    activate: local
   servlet:
     context-path: /gateway
+
+spring:
+  profiles:
+    active: dev
   jpa:
     hibernate:
       naming:
@@ -35,3 +37,10 @@ logging:
         SQL: DEBUG
         type: trace
 
+bnids-app:
+  servers:
+    localServer: 'http://api.local.happyparking.co.kr/local/api/gateway'
+    signage-interface-server: 'http://signage.local.happyparking.co.kr/signage/api/signal/transit'
+    gateControlServer: 'http://gate.local.happyparking.co.kr/gate'
+    push-server: 'http://push.happyparking.co.kr'
+    homenet-interface-server: 'http://homenet.local.happyparking.co.kr/homenet'
