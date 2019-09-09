@@ -28,8 +28,8 @@ spring:
 
 bnids-app:
   servers:
-    localServer: 'http://118.131.237.204:12000/local/api/gateway'
-    signage-interface-server: 'http://118.131.237.204:12020/api/signal/transit'
-    gateControlServer: 'http://118.131.237.204:12030/gate'
+    localServer: 'http://118.131.237.204:4560/local/api/gateway'
+    signage-interface-server: 'http://118.131.237.204:4560/signage/api/signal/transit'
+    gateControlServer: 'http://118.131.237.204:4560/gate/api/gate'
     push-server: 'http://push.happyparking.co.kr'
     homenet-interface-server: 'http://homenet.local.happyparking.co.kr/homenet'

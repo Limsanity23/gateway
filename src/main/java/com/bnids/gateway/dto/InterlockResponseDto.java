@@ -22,14 +22,14 @@
  */
 package com.bnids.gateway.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * @author yannishin
  */
 @Setter @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class InterlockResponseDto {
     private String code;
