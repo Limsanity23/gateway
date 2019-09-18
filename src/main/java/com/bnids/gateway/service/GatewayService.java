@@ -138,6 +138,8 @@ public class GatewayService {
                     requestDto.setCarSection(registCar.getRegistItem());
                     requestDto.setTelNo(registCar.getTelNo());
                     requestDto.setVisitName(registCar.getOwnerName());
+                    requestDto.setAddressDong(registCar.getAddressDong());
+                    requestDto.setAddressHo(registCar.getAddressHo());
 
                     isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                 }
@@ -165,9 +167,12 @@ public class GatewayService {
                 if (registCar == null) {
                     requestDto.setCarSection(2L);
                 } else {
+                    requestDto.setRegistCarId(registCar.getRegistCarId());
                     requestDto.setCarSection(registCar.getRegistItem());
                     requestDto.setTelNo(registCar.getTelNo());
                     requestDto.setVisitName(registCar.getOwnerName());
+                    requestDto.setAddressDong(registCar.getAddressDong());
+                    requestDto.setAddressHo(registCar.getAddressHo());
                 }
 
                 if (transitMode == 2) { // 인식후 통과
@@ -227,7 +232,7 @@ public class GatewayService {
         LocalDateTime now = LocalDateTime.now();
         if (logicType == 99) {
             log.info("등록 차량 조회 carNo = {}",carNo);
-            return registCarRepository.findByCarNoAndAprvlStatusAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(carNo, 1, now, now);
+            return registCarRepository.findByCarNoAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, 1, now, now);
         } else {
             return findRegistCarByDigitCarNo(carNo, now);
         }
@@ -242,7 +247,7 @@ public class GatewayService {
     private RegistCar findRegistCarByDigitCarNo(String carNo, LocalDateTime now) {
         String digitCarNo = digitCarNo(carNo);
         log.info("{}({}) 등록차량조회", carNo, digitCarNo);
-        Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(digitCarNo,1, now, now);
+        Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
 
         if(registCarStream.count() == 1) { // 결과가 1개이면
             return registCarStream.findFirst().get();
