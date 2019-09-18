@@ -41,4 +41,6 @@ public class LocalServerRequestDto {
     private String carImage;
     private String telNo;
     private String visitPlaceName;
+    private String addressDong;
+    private String addressHo;
 }

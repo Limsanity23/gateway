@@ -88,6 +88,8 @@ public class InterlockService {
                 .carImage(dto.getCarImage())
                 .telNo(dto.getTelNo())
                 .visitPlaceName(dto.getVisitName())
+                .addressDong(dto.getAddressDong())
+                .addressHo(dto.getAddressHo())
                 .build();
 
         String localServer = appSetting.getLocalServer();

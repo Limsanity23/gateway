@@ -1,18 +1,26 @@
+server:
+  port: 12010
+  compression:
+    enabled: true
+    min-response-size: 256
+
 spring:
   datasource:
     hikari: #https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby
-      jdbcUrl: jdbc:mariadb://db.local.happyparking.co.kr/local_db?useUnicode=true&characterEncoding=utf8
-      username: bnids
-      password: qldps_2020
+      jdbc-url: jdbc:mariadb://45.119.145.17/localdb?useUnicode=true&characterEncoding=utf8
       driver-class-name: org.mariadb.jdbc.Driver
+      username: local
+      password: fhzjf10@4
       connectionTimeout: 30000
       idleTimeout: 600000
       maxLifetime: 1800000
       minimumIdle: 40
       maximumPoolSize: 40
+
   jpa:
     database: mysql
     show-sql: false
+    open-in-view: false
     generate-ddl: false
 
     hibernate:
@@ -26,13 +34,3 @@ spring:
     console:
       enabled: false
 
-logging:
-  config: file:/usr/local/bnids/webservice/gateway-server/log4j2.xml
-
-bnids-app:
-  servers:
-    localServer: 'http://api.local.happyparking.co.kr/local/api/gateway'
-    signageInterfaceServer: 'http://signage.local.happyparking.co.kr/signage/api/signal/transit'
-    gateControlServer: 'http://gate.local.happyparking.co.kr/gate/api/gate'
-    pushServer: 'http://push.happyparking.co.kr'
-    homenetInterfaceServer: 'http://homenet.local.happyparking.co.kr/homenet'
