@@ -46,6 +46,25 @@ public class InterlockService {
     private final WebClient webClient;
 
     /**
+     *  차단기 연동 서버에 차량정보 전송
+     *  인터페이스 ID PCLPR0004
+     *
+     * @param dto 연동요청 Dto
+     */
+    public void sendGateServer(Long gateId) {
+        String gateServer = appSetting.getGateControlServer();
+
+        Mono<InterlockResponseDto> gateResponse  = webClient.get()
+                .uri(gateServer+"/{gateId}", gateId)
+                .retrieve()
+                .bodyToMono(InterlockResponseDto.class);
+
+        gateResponse
+                .doOnError(t-> log.error("Gate Server API:{}, params:{}",gateServer,gateId,t))
+                .subscribe(s-> log.info("Gate Server API:{}, params:{}, response:{}",gateServer,gateId,s));
+    }
+
+    /**
      *  전광판 콘트롤러 연동 서버에 차량정보 전송
      *  인터페이스 ID PCLPR0002
      *
@@ -107,21 +126,30 @@ public class InterlockService {
     }
 
     /**
-     *  차단기 연동 서버에 차량정보 전송
-     *  인터페이스 ID PCLPR0004
+     *  로컬 서버에 차량정보 전송
+     *  인터페이스 ID PCLPR0003
      *
      * @param dto 연동요청 Dto
      */
-    public void sendGateServer(Long gateId) {
-        String gateServer = appSetting.getGateControlServer();
+    public void sendHomenetServer(InterlockRequestDto dto) {
+        HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
+                .carNo(dto.getCarNo())
+                .gateType(dto.getGateType())
+                .addressDong(dto.getAddressDong())
+                .addressHo(dto.getAddressHo())
+                .build();
 
-        Mono<InterlockResponseDto> gateResponse  = webClient.get()
-                .uri(gateServer+"/{gateId}", gateId)
+        String homenetServer = appSetting.getHomenetInterfaceServer();
+
+        Mono<InterlockResponseDto> homenetResponse  = webClient.post()
+                .uri(homenetServer)
+                .syncBody(homenetServerRequestDto)
+                //.body(BodyInserters.fromObject(localServerRequestDto))
                 .retrieve()
                 .bodyToMono(InterlockResponseDto.class);
 
-        gateResponse
-                .doOnError(t-> log.error("Gate Server API:{}, params:{}",gateServer,gateId,t))
-                .subscribe(s-> log.info("Gate Server API:{}, params:{}, response:{}",gateServer,gateId,s));
+        homenetResponse
+                .doOnError(t->log.error("Local Server API:{}, params:{}",homenetServer,homenetServerRequestDto, t))
+                .subscribe(s-> log.info("Local Server API:{}, params:{}, response:{}",homenetResponse,homenetResponse,s));
     }
 }

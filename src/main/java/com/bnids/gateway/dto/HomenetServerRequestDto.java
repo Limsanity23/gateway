@@ -31,22 +31,9 @@ import lombok.Setter;
  */
 @Setter @Getter
 @Builder
-public class InterlockRequestDto {
+public class HomenetServerRequestDto {
     private String carNo;
-    private String lprCarNo;
-    private Long registCarId;
-    private Long carSection;
-    private Long gateId;
-    private String gateName;
     private Integer gateType;
-    private Integer gateStatus;
-    private String carImage;
-    private Integer plateType;
-    private String telNo;
-    private String visitName;
     private String addressDong;
     private String addressHo;
-    private String noticeSetup;
-    private String installOption;
 }
-

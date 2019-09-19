@@ -93,6 +93,7 @@ public class GatewayService {
                 .carNo(lprCarNo)
                 .gateId(gateId)
                 .gateType(gate.getGateType())
+                .installOption(systemSetup.getInstallOption())
                 .carImage(lprRequestDto.getCarImage())
                 .plateType(lprRequestDto.getPlateType()).build();
 
@@ -140,6 +141,7 @@ public class GatewayService {
                     requestDto.setVisitName(registCar.getOwnerName());
                     requestDto.setAddressDong(registCar.getAddressDong());
                     requestDto.setAddressHo(registCar.getAddressHo());
+                    requestDto.setNoticeSetup(registCar.getNoticeSetup());
 
                     isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                 }
@@ -173,6 +175,7 @@ public class GatewayService {
                     requestDto.setVisitName(registCar.getOwnerName());
                     requestDto.setAddressDong(registCar.getAddressDong());
                     requestDto.setAddressHo(registCar.getAddressHo());
+                    requestDto.setNoticeSetup(registCar.getNoticeSetup());
                 }
 
                 if (transitMode == 2) { // 인식후 통과
@@ -469,6 +472,11 @@ public class GatewayService {
         interlockService.sendGateServer(requestDto.getGateId());
         interlockService.sendSignageServer(requestDto);
         interlockService.sendLocalServer(requestDto);
+
+        if (StringUtils.contains(requestDto.getInstallOption(), "HOMENET")
+                && StringUtils.contains(requestDto.getNoticeSetup(),"HOMENET")) {
+            interlockService.sendHomenetServer(requestDto);
+        }
     }
 
     /**

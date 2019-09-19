@@ -50,6 +50,9 @@ public class SystemSetup extends AuditModel<Long> {
     @Column(nullable = false)
     private Integer logicType;
 
+    @Column
+    private String installOption;
+
     @Override
     public Long getId() {
         return systemSetupId;
