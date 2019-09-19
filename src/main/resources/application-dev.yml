@@ -26,10 +26,15 @@ spring:
     console:
       enabled: false
 
+logging:
+  config: file:/usr/local/bnids/webservice/gateway-server/log4j2.xml
+
 bnids-app:
   servers:
     localServer: 'http://api.local.happyparking.co.kr/local/api/gateway'
-    signage-interface-server: 'http://signage.local.happyparking.co.kr/signage/api/signal/transit'
+    signageInterfaceServer: 'http://signage.local.happyparking.co.kr/signage/api/signal/transit'
     gateControlServer: 'http://gate.local.happyparking.co.kr/gate/api/gate'
-    push-server: 'http://push.happyparking.co.kr'
-    homenet-interface-server: 'http://homenet.local.happyparking.co.kr/homenet'
+    pushServer: 'http://push.happyparking.co.kr'
+    homenetInterfaceServer: 'http://homenet.local.happyparking.co.kr/homenet'
+
+
