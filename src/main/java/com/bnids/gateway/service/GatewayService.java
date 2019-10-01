@@ -493,5 +493,4 @@ public class GatewayService {
     private String digitCarNo(String carNo) {
         return carNo.replaceAll("[^0-9]", "");
     }
-
 }
