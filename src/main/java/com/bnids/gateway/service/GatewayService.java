@@ -367,14 +367,15 @@ public class GatewayService {
                             log.info("{} {}({}) 출입제한, 시간 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return true;
                         }
-
+                        log.info("{} {}({}) 출입제한, 미적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                         return false;
                     }
 
                     // 부제 운행
+                    String carNo = requestDto.getCarNo();
                     if (operationLimitSetup > 0) {
                         if ("N".equals(carAccessLimit.getOperationLimitExceptYn())) {
-                            String carNo = requestDto.getCarNo();
+
                             String digit = digitCarNo(carNo);
                             int postfix = NumberUtils.toInt(StringUtils.right(digit, 1));
                             int prefix = NumberUtils.toInt(StringUtils.left(digit, 2));
@@ -410,7 +411,7 @@ public class GatewayService {
                                 }
                             }
                         }
-
+                        log.info("{} {}({}) 부제 운행 제한, 미적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
                         return false;
                     }
 
