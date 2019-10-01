@@ -252,13 +252,16 @@ public class GatewayService {
         Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
 
         if(registCarStream.count() == 1) { // 결과가 1개이면
+            log.info("{}({}) 등록차량조회 : 1건 조회됨", carNo, digitCarNo);
             return registCarStream.findFirst().get();
         } else { // 결과가 2개 이상
             Stream<RegistCar> stream = registCarStream.filter(registCar -> carNo.equals(registCar.getCarNo()));
 
             if (stream.count() == 0) { // 완전히 일차하는 차량이 없을 경우
+                log.info("{}({}) 등록차량조회 : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
                 return registCarStream.findFirst().get();
             } else { // 완전히 일차하는 차량이 존재
+                log.info("{}({}) 등록차량조회 : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
                 return stream.findFirst().get();
             }
         }
