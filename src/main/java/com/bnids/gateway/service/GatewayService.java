@@ -35,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -131,7 +130,7 @@ public class GatewayService {
                             requestDto.setTelNo(appVisitCar.getVisitTelNo());
                             requestDto.setVisitName(appVisitCar.getVisitorName());
 
-                            isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
+                            isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                         }
                     }
                 } else {
@@ -143,7 +142,7 @@ public class GatewayService {
                     requestDto.setAddressHo(registCar.getAddressHo());
                     requestDto.setNoticeSetup(registCar.getNoticeSetup());
 
-                    isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
+                    isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                 }
 
 
@@ -179,7 +178,7 @@ public class GatewayService {
                 }
 
                 if (transitMode == 2) { // 인식후 통과
-                    boolean isOperationLimit = isCarAccessLimit(requestDto, logicType, operationLimitSetup);
+                    boolean isOperationLimit = isCarAccessLimit(requestDto, transitMode, operationLimitSetup);
                     boolean isWarningCar = isWarningCar(carNo);
 
                     if (!isOperationLimit && isWarningCar) {
@@ -280,12 +279,12 @@ public class GatewayService {
      * 차량통과 여부(통로별 통과 + 차량출입제한)
      *
      * @param requestDto 연동요청 Dto
-     * @param logicType 로직유형
+     * @param transitMode 통과모드
      * @param operationLimitSetup 운핼제한 설정
      * @return 차량통과 여부
      */
-    private boolean isAllowPass(InterlockRequestDto requestDto, Integer logicType, Integer operationLimitSetup) {
-        return isGateItemTransitCar(requestDto) && !isCarAccessLimit(requestDto, logicType, operationLimitSetup);
+    private boolean isAllowPass(InterlockRequestDto requestDto, Integer transitMode, Integer operationLimitSetup) {
+        return isGateItemTransitCar(requestDto) && !isCarAccessLimit(requestDto, transitMode, operationLimitSetup);
     }
 
 
@@ -312,15 +311,15 @@ public class GatewayService {
      * 차량 출입 제한
      *
      * @param requestDto 연동요청 Dto
-     * @param logicType 로직유형
+     * @param transitMode 통과모드
      * @param operationLimitSetup 운핼제한 설정
      * @return 차량 출입 제한 여부
      */
-    private boolean isCarAccessLimit(InterlockRequestDto requestDto, Integer logicType, Integer operationLimitSetup) {
+    private boolean isCarAccessLimit(InterlockRequestDto requestDto, Integer transitMode, Integer operationLimitSetup) {
         log.info("{} {}({}) 출입제한 시작",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
         return carAccessLimitRepository.findByRegistCarId(requestDto.getRegistCarId())
                 .map(carAccessLimit -> {
-                    if (logicType == 1) {
+                    if (transitMode == 1) {
                         LocalDateTime currentTime = LocalDateTime.now();
 
                         // 요일제한
@@ -368,6 +367,8 @@ public class GatewayService {
                             log.info("{} {}({}) 출입제한, 시간 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return true;
                         }
+
+                        return false;
                     }
 
                     // 부제 운행
@@ -387,46 +388,9 @@ public class GatewayService {
                                     int dayOfWeek = LocalDateTime.now().getDayOfWeek().getValue();
 
                                     if ((dayOfWeek == postfix) || ((dayOfWeek + 5) == postfix)) {
-                                        log.info("{} {}({}) 부제 운행 제한, 5부제 적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
+                                        log.info("{} {}({}) 부제 운행 제한, 5부제 적용 ", carNo, requestDto.getGateName(), requestDto.getGateId());
                                         return true;
                                     }
-
-                                    /*
-                                    switch (LocalDateTime.now().getDayOfWeek().getValue()) {
-                                        case 1: //월요일
-                                            if (postfix == 1 || postfix == 6) {
-                                                return true;
-                                            }
-                                            break;
-
-                                        case 2:
-                                            if (postfix == 2 || postfix == 7) {
-                                                return true;
-                                            }
-                                            break;
-
-                                        case 3:
-
-                                            if (postfix == 3 || postfix == 8) {
-                                                return true;
-                                            }
-                                            break;
-
-                                        case 4:
-
-                                            if (postfix == 4 || postfix == 9) {
-                                                return true;
-                                            }
-                                            break;
-
-                                        case 5: // 금요일
-                                            if (postfix == 0 || postfix == 5) {
-                                                return true;
-                                            }
-                                            break;
-                                    }
-                                    */
-
                                 } else {
                                     int day = LocalDateTime.now().getDayOfMonth();
                                     if (day < 30) { // 31일은 부제 적용 예외
@@ -436,7 +400,7 @@ public class GatewayService {
                                                 return true;
                                             }
 
-                                        } else if (operationLimitSetup == 10) {
+                                        } else if (operationLimitSetup == 10) { // 10부제
                                             if ((day % 10) == postfix) {
                                                 log.info("{} {}({}) 부제 운행 제한, 10부제 적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
                                                 return true;
@@ -446,6 +410,8 @@ public class GatewayService {
                                 }
                             }
                         }
+
+                        return false;
                     }
 
                     return false;
@@ -469,14 +435,10 @@ public class GatewayService {
      */
     private void accessAllowed(InterlockRequestDto requestDto) {
         requestDto.setGateStatus(1);
-        interlockService.sendGateServer(requestDto.getGateId());
+        interlockService.sendGateServer(requestDto);
         interlockService.sendSignageServer(requestDto);
         interlockService.sendLocalServer(requestDto);
-
-        if (StringUtils.contains(requestDto.getInstallOption(), "HOMENET")
-                && StringUtils.contains(requestDto.getNoticeSetup(),"HOMENET")) {
-            interlockService.sendHomenetServer(requestDto);
-        }
+        interlockService.sendHomenetServer(requestDto);
     }
 
     /**

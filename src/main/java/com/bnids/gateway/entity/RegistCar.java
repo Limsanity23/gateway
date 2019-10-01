@@ -109,6 +109,9 @@ public class RegistCar extends AuditModel<Long> {
     @Column(length = 1000)
     private String noticeSetup;
 
+    @Column(length = 100)
+    private String visitKioskPassword;
+
     @Column
     private LocalDateTime deletedDt;
 

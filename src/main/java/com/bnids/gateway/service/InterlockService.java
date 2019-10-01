@@ -28,6 +28,7 @@ import com.bnids.config.AppSetting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -51,17 +52,20 @@ public class InterlockService {
      *
      * @param dto 연동요청 Dto
      */
-    public void sendGateServer(Long gateId) {
-        String gateServer = appSetting.getGateControlServer();
+    public void sendGateServer(InterlockRequestDto dto) {
+        if (StringUtils.contains(dto.getInstallOption(), "BLDC_GATE")) {
+            String gateServer = appSetting.getGateControlServer();
+            Long gateId = dto.getGateId();
 
-        Mono<InterlockResponseDto> gateResponse  = webClient.get()
-                .uri(gateServer+"/{gateId}", gateId)
-                .retrieve()
-                .bodyToMono(InterlockResponseDto.class);
+            Mono<InterlockResponseDto> gateResponse = webClient.get()
+                    .uri(gateServer + "/{gateId}", gateId)
+                    .retrieve()
+                    .bodyToMono(InterlockResponseDto.class);
 
-        gateResponse
-                .doOnError(t-> log.error("Gate Server API:{}, params:{}",gateServer,gateId,t))
-                .subscribe(s-> log.info("Gate Server API:{}, params:{}, response:{}",gateServer,gateId,s));
+            gateResponse
+                    .doOnError(t -> log.error("Gate Server API:{}, params:{}", gateServer, gateId, t))
+                    .subscribe(s -> log.info("Gate Server API:{}, params:{}, response:{}", gateServer, gateId, s));
+        }
     }
 
     /**
@@ -71,23 +75,25 @@ public class InterlockService {
      * @param dto 연동요청 Dto
      */
     public void sendSignageServer(InterlockRequestDto dto) {
-        SignageServerRequestDto signageServerRequestDto = SignageServerRequestDto.builder()
-                .carNo(dto.getCarNo())
-                .gateId(dto.getGateId())
-                .registItemId(dto.getCarSection())
-                .build();
+        if (StringUtils.contains(dto.getInstallOption(), "SIGNAGE")) {
+            SignageServerRequestDto signageServerRequestDto = SignageServerRequestDto.builder()
+                    .carNo(dto.getCarNo())
+                    .gateId(dto.getGateId())
+                    .registItemId(dto.getCarSection())
+                    .build();
 
-        String signageInterfaceServer = appSetting.getSignageInterfaceServer();
+            String signageInterfaceServer = appSetting.getSignageInterfaceServer();
 
-        Mono<InterlockResponseDto> signageResponse  = webClient.post()
-                .uri(signageInterfaceServer)
-                .syncBody(signageServerRequestDto)
-                .retrieve()
-                .bodyToMono(InterlockResponseDto.class);
+            Mono<InterlockResponseDto> signageResponse = webClient.post()
+                    .uri(signageInterfaceServer)
+                    .syncBody(signageServerRequestDto)
+                    .retrieve()
+                    .bodyToMono(InterlockResponseDto.class);
 
-        signageResponse
-                .doOnError(t->log.error("Signage Server API:{}, params:{}",signageInterfaceServer,signageServerRequestDto,t))
-                .subscribe(s->log.info("Signage Server API:{}, params:{}, response:{}",signageInterfaceServer,signageServerRequestDto,s));
+            signageResponse
+                    .doOnError(t -> log.error("Signage Server API:{}, params:{}", signageInterfaceServer, signageServerRequestDto, t))
+                    .subscribe(s -> log.info("Signage Server API:{}, params:{}, response:{}", signageInterfaceServer, signageServerRequestDto, s));
+        }
     }
 
     /**
@@ -132,24 +138,27 @@ public class InterlockService {
      * @param dto 연동요청 Dto
      */
     public void sendHomenetServer(InterlockRequestDto dto) {
-        HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
-                .carNo(dto.getCarNo())
-                .gateType(dto.getGateType())
-                .addressDong(dto.getAddressDong())
-                .addressHo(dto.getAddressHo())
-                .build();
+        if (StringUtils.contains(dto.getInstallOption(), "HOMENET")
+                && StringUtils.contains(dto.getNoticeSetup(),"HOMENET")) {
+            HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
+                    .carNo(dto.getCarNo())
+                    .gateType(dto.getGateType())
+                    .addressDong(dto.getAddressDong())
+                    .addressHo(dto.getAddressHo())
+                    .build();
 
-        String homenetServer = appSetting.getHomenetInterfaceServer();
+            String homenetServer = appSetting.getHomenetInterfaceServer();
 
-        Mono<InterlockResponseDto> homenetResponse  = webClient.post()
-                .uri(homenetServer)
-                .syncBody(homenetServerRequestDto)
-                //.body(BodyInserters.fromObject(localServerRequestDto))
-                .retrieve()
-                .bodyToMono(InterlockResponseDto.class);
+            Mono<InterlockResponseDto> homenetResponse = webClient.post()
+                    .uri(homenetServer)
+                    .syncBody(homenetServerRequestDto)
+                    //.body(BodyInserters.fromObject(localServerRequestDto))
+                    .retrieve()
+                    .bodyToMono(InterlockResponseDto.class);
 
-        homenetResponse
-                .doOnError(t->log.error("Local Server API:{}, params:{}",homenetServer,homenetServerRequestDto, t))
-                .subscribe(s-> log.info("Local Server API:{}, params:{}, response:{}",homenetResponse,homenetResponse,s));
+            homenetResponse
+                    .doOnError(t -> log.error("Local Server API:{}, params:{}", homenetServer, homenetServerRequestDto, t))
+                    .subscribe(s -> log.info("Local Server API:{}, params:{}, response:{}", homenetResponse, homenetResponse, s));
+        }
     }
 }
