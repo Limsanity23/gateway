@@ -415,6 +415,7 @@ public class GatewayService {
                         return false;
                     }
 
+                    log.info("{} {}({}) 부제 운행 제한, 미적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
                     return false;
                 }).orElse(false);
     }
