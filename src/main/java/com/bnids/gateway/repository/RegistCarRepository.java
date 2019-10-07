@@ -39,6 +39,6 @@ import java.util.stream.Stream;
 public interface RegistCarRepository extends BaseJPARepository<RegistCar, Long> {
     RegistCar findByCarNoAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(
             String carNo, Integer aprvStatus, LocalDateTime start, LocalDateTime finish);
-    Stream<RegistCar> findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(
+    List<RegistCar> findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(
             String digitCarNo,Integer aprvStatus, LocalDateTime start, LocalDateTime finish);
 }

@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -96,8 +97,7 @@ public class GatewayService {
                 .carImage(lprRequestDto.getCarImage())
                 .plateType(lprRequestDto.getPlateType()).build();
 
-        if (accuracy == 0) { // 미인식
-
+        if (StringUtils.contains(lprCarNo, "미인식")) {
             requestDto.setCarSection(1L);
             if (transitMode == 3) {
                 // 무조건 통과인 경우만 출입 허용
@@ -108,7 +108,6 @@ public class GatewayService {
             }
         } else { // 인식, 오인식
             if (transitMode == 1) { // 획인후 통과
-
                 boolean isAllowPass = false;
                 RegistCar registCar = findRegistCar(carNo, logicType);
 
@@ -249,17 +248,22 @@ public class GatewayService {
     private RegistCar findRegistCarByDigitCarNo(String carNo, LocalDateTime now) {
         String digitCarNo = digitCarNo(carNo);
         log.info("{}({}) 등록차량조회", carNo, digitCarNo);
-        Stream<RegistCar> registCarStream = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
+        List<RegistCar> registCarList = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
+        //Stream<RegistCar> registCarStream = registCarList.stream();
 
-        if(registCarStream.count() == 1) { // 결과가 1개이면
+        if (registCarList.isEmpty()) {
+            return null;
+        }
+
+        if(registCarList.size() == 1) { // 결과가 1개이면
             log.info("{}({}) 등록차량조회 : 1건 조회됨", carNo, digitCarNo);
-            return registCarStream.findFirst().get();
+            return registCarList.get(0);
         } else { // 결과가 2개 이상
-            Stream<RegistCar> stream = registCarStream.filter(registCar -> carNo.equals(registCar.getCarNo()));
+            Stream<RegistCar> stream = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo()));
 
             if (stream.count() == 0) { // 완전히 일차하는 차량이 없을 경우
                 log.info("{}({}) 등록차량조회 : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
-                return registCarStream.findFirst().get();
+                return registCarList.get(0);
             } else { // 완전히 일차하는 차량이 존재
                 log.info("{}({}) 등록차량조회 : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
                 return stream.findFirst().get();
@@ -307,7 +311,10 @@ public class GatewayService {
                         log.info("{} {}({}) 통로별통과 차량, 차단됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                         return false;
                     }
-                }).orElse(false);
+                }).orElseGet(() ->{
+                    log.info("{} {}({}) 통로별통과 차량 설정이 안되어 있어 차단됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                    return false;
+                });
     }
 
     /**
@@ -350,6 +357,11 @@ public class GatewayService {
                         }
 
                         //제한 일자
+                        if (carAccessLimit.getLimitBeginDate() == null || carAccessLimit.getLimitEndDate() == null) {
+                            return false;
+                        }
+
+
                         if (currentTime.isAfter(carAccessLimit.getLimitBeginDate().atTime(0, 1))
                                 && currentTime.isBefore(carAccessLimit.getLimitEndDate().atTime(23, 59))) {
                             log.info("{} {}({}) 출입제한, 일자 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
@@ -357,6 +369,10 @@ public class GatewayService {
                         }
 
                         // 제한시간
+                        if (carAccessLimit.getLimitBeginTime() == null || carAccessLimit.getLimitEndTime() == null) {
+                            return false;
+                        }
+
                         LocalTime limitBeginTime = carAccessLimit.getLimitBeginTime();
                         LocalTime limitEndTime = carAccessLimit.getLimitEndTime();
 
@@ -420,7 +436,10 @@ public class GatewayService {
 
                     log.info("{} {}({}) 부제 운행 제한, 미적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
                     return false;
-                }).orElse(false);
+                }).orElseGet(() -> {
+                    log.info("{}({}) 부제 운행 제한, 데이터 없음 : 미적용 ",requestDto.getGateName(), requestDto.getGateId());
+                    return false;
+                });
     }
 
     /**
@@ -430,7 +449,12 @@ public class GatewayService {
      * @return 경고차량 여부
      */
     private boolean isWarningCar(String carNo) {
-        return warningCarRepository.existsByCarNo(carNo);
+
+        boolean warningCar = warningCarRepository.existsByCarNo(carNo);
+        if (warningCar) {
+            log.info("{} 경고 차량차량으로 출입 차단됨",carNo);
+        }
+        return warningCar;
     }
 
     /**

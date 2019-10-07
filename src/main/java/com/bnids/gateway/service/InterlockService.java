@@ -63,8 +63,12 @@ public class InterlockService {
                     .bodyToMono(InterlockResponseDto.class);
 
             gateResponse
-                    .doOnError(t -> log.error("Gate Server API:{}, params:{}", gateServer, gateId, t))
-                    .subscribe(s -> log.info("Gate Server API:{}, params:{}, response:{}", gateServer, gateId, s));
+                    .doOnError(t -> {
+                        log.error("Gate Server API:{}, gateId:{}", gateServer, gateId, t);
+                    })
+                    .subscribe(s -> {
+                        log.info("Gate Server API:{}, gateId:{}, response:{}", gateServer, gateId, s.getMessage());
+                    });
         }
     }
 
@@ -91,8 +95,12 @@ public class InterlockService {
                     .bodyToMono(InterlockResponseDto.class);
 
             signageResponse
-                    .doOnError(t -> log.error("Signage Server API:{}, params:{}", signageInterfaceServer, signageServerRequestDto, t))
-                    .subscribe(s -> log.info("Signage Server API:{}, params:{}, response:{}", signageInterfaceServer, signageServerRequestDto, s));
+                    .doOnError(t -> {
+                        log.error("Signage Server API:{}, carNo:{}", signageInterfaceServer, signageServerRequestDto.getCarNo(), t);
+                    })
+                    .subscribe(s -> {
+                        log.info("Signage Server API:{}, carNo:{}, response:{}", signageInterfaceServer, signageServerRequestDto.getCarNo(), s.getMessage());
+                    });
         }
     }
 
@@ -127,8 +135,12 @@ public class InterlockService {
                 .bodyToMono(InterlockResponseDto.class);
 
         localResponse
-                .doOnError(t->log.error("Local Server API:{}, params:{}",localServer,localServerRequestDto, t))
-                .subscribe(s-> log.info("Local Server API:{}, params:{}, response:{}",localResponse,localResponse,s));
+                .doOnError(t->{
+                    log.error("Local Server API:{}, carNo:{}",localServer,localServerRequestDto.getCarNo(), t);
+                })
+                .subscribe(s-> {
+                    log.info("Local Server API:{}, carNo:{}, response:{}",localServer,localServerRequestDto.getCarNo(),s.getMessage());
+                });
     }
 
     /**
@@ -157,8 +169,12 @@ public class InterlockService {
                     .bodyToMono(InterlockResponseDto.class);
 
             homenetResponse
-                    .doOnError(t -> log.error("Local Server API:{}, params:{}", homenetServer, homenetServerRequestDto, t))
-                    .subscribe(s -> log.info("Local Server API:{}, params:{}, response:{}", homenetResponse, homenetResponse, s));
+                    .doOnError(t -> {
+                        log.error("Local Server API:{}, carNo:{}", homenetServer, homenetServerRequestDto.getCarNo(), t);
+                    })
+                    .subscribe(s -> {
+                        log.info("Local Server API:{}, carNo:{}, response:{}", homenetServer, homenetServerRequestDto.getCarNo(), s.getMessage());
+                    });
         }
     }
 }
