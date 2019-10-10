@@ -78,7 +78,8 @@ public class GatewayService {
         String carNo = lprCarNo;
         Long gateId = lprRequestDto.getGateId();
 
-        log.info("CarNo = {}, gateId = {} 출입 시작",carNo,lprRequestDto.getGateId());
+
+
 
         SystemSetup systemSetup = findSystemSetup(1L);
         Integer logicType = systemSetup.getLogicType();
@@ -86,12 +87,17 @@ public class GatewayService {
 
         Gate gate = findGate(gateId);
 
+        String gateName = gate.getGateName();
+
         Integer transitMode = gate.getTransitMode();
+
+        log.info("차량번호 = {}, 통로 = {}({}) 출입 시작",carNo,gateName, gateId);
 
         InterlockRequestDto requestDto = InterlockRequestDto.builder()
                 .lprCarNo(lprCarNo)
                 .carNo(lprCarNo)
                 .gateId(gateId)
+                .gateName(gate.getGateName())
                 .gateType(gate.getGateType())
                 .installOption(systemSetup.getInstallOption())
                 .carImage(lprRequestDto.getCarImage())
@@ -232,7 +238,7 @@ public class GatewayService {
     private RegistCar findRegistCar(String carNo, Integer logicType) {
         LocalDateTime now = LocalDateTime.now();
         if (logicType == 99) {
-            log.info("등록 차량 조회 carNo = {}",carNo);
+            log.info("등록 차량 조회(완전일치로직) 차량번호 = {}",carNo);
             return registCarRepository.findByCarNoAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, 1, now, now);
         } else {
             return findRegistCarByDigitCarNo(carNo, now);
@@ -247,7 +253,7 @@ public class GatewayService {
      */
     private RegistCar findRegistCarByDigitCarNo(String carNo, LocalDateTime now) {
         String digitCarNo = digitCarNo(carNo);
-        log.info("{}({}) 등록차량조회", carNo, digitCarNo);
+        log.info("등록 차량 조회(숫자일치로직) 차량번호 = {}({})", carNo, digitCarNo);
         List<RegistCar> registCarList = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
         //Stream<RegistCar> registCarStream = registCarList.stream();
 
@@ -256,16 +262,16 @@ public class GatewayService {
         }
 
         if(registCarList.size() == 1) { // 결과가 1개이면
-            log.info("{}({}) 등록차량조회 : 1건 조회됨", carNo, digitCarNo);
+            log.info("차량번호 = {}({}) : 1건 조회됨", carNo, digitCarNo);
             return registCarList.get(0);
         } else { // 결과가 2개 이상
             Stream<RegistCar> stream = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo()));
 
             if (stream.count() == 0) { // 완전히 일차하는 차량이 없을 경우
-                log.info("{}({}) 등록차량조회 : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
+                log.info("차랭번호 = {}({}) : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
                 return registCarList.get(0);
             } else { // 완전히 일차하는 차량이 존재
-                log.info("{}({}) 등록차량조회 : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
+                log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
                 return stream.findFirst().get();
             }
         }
@@ -283,6 +289,7 @@ public class GatewayService {
     }
 
     /**
+     *
      * 차량통과 여부(통로별 통과 + 차량출입제한)
      *
      * @param requestDto 연동요청 Dto
@@ -305,14 +312,14 @@ public class GatewayService {
         return  gateItemTransitCarRepository.findByGateIdAndRegistItemId(requestDto.getGateId(), requestDto.getCarSection())
                 .map(gateItemTransitCar -> {
                     if ("Y".equalsIgnoreCase(gateItemTransitCar.getItemTransitYn())) {
-                        log.info("{} {}({}) 통로별통과 차량, 통과됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                        log.info("차량번호 = {}, 통로 = {}({}) 통로별통과 차량, 통과됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                         return true;
                     } else {
-                        log.info("{} {}({}) 통로별통과 차량, 차단됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                        log.info("차량번호 = {}, 통로 = {}({}) 통로별통과 차량, 차단됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                         return false;
                     }
                 }).orElseGet(() ->{
-                    log.info("{} {}({}) 통로별통과 차량 설정이 안되어 있어 차단됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                    log.info("차량번호 = {}, 통로 = {}({}) 통로별통과 차량 설정이 안되어 있어 차단됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                     return false;
                 });
     }
@@ -326,7 +333,7 @@ public class GatewayService {
      * @return 차량 출입 제한 여부
      */
     private boolean isCarAccessLimit(InterlockRequestDto requestDto, Integer transitMode, Integer operationLimitSetup) {
-        log.info("{} {}({}) 출입제한 시작",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+        log.info("차량번호 = {}, 통로 = {}({}) 출입제한 시작",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
         return carAccessLimitRepository.findByRegistCarId(requestDto.getRegistCarId())
                 .map(carAccessLimit -> {
                     if (transitMode == 1) {
@@ -338,7 +345,7 @@ public class GatewayService {
 
                             for (String dayLimit : dayLimits) {
                                 if (currentTime.getDayOfWeek().getValue() == NumberUtils.toInt(dayLimit)) {
-                                    log.info("{} {}({}) 출입제한, 요일 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                                    log.info("차량번호 = {}, 통로 = {}({}) 출입제한됨, 요일 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                                     return true;
                                 }
                             }
@@ -350,7 +357,7 @@ public class GatewayService {
 
                             for (String dateLimit : dateLimits) {
                                 if (currentTime.getDayOfMonth() == NumberUtils.toInt(dateLimit)) {
-                                    log.info("{} {}({}) 출입제한, 날짜 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                                    log.info("차량번호 = {}, 통로 = {}({}) 출입제한됨, 날짜 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                                     return true;
                                 }
                             }
@@ -364,7 +371,7 @@ public class GatewayService {
 
                         if (currentTime.isAfter(carAccessLimit.getLimitBeginDate().atTime(0, 1))
                                 && currentTime.isBefore(carAccessLimit.getLimitEndDate().atTime(23, 59))) {
-                            log.info("{} {}({}) 출입제한, 일자 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                            log.info("차량번호 = {}, 통로 = {}({}) 출입제한됨, 일자 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return true;
                         }
 
@@ -383,10 +390,10 @@ public class GatewayService {
                         }
                         if ((currentTime.isAfter(beginDateTime) || currentTime.isEqual(beginDateTime))
                                 && (currentTime.isBefore(endDateTime) || currentTime.isEqual(endDateTime))) {
-                            log.info("{} {}({}) 출입제한, 시간 적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                            log.info("차량번호 = {}, 통로 = {}({}) 출입제한됨, 시간 적용",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return true;
                         }
-                        log.info("{} {}({}) 출입제한, 미적용 ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+                        log.info("차량번호 = {}, 통로 = {}({}) 출입제한, 미적용으로 통과됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                         return false;
                     }
 
@@ -408,7 +415,7 @@ public class GatewayService {
                                     int dayOfWeek = LocalDateTime.now().getDayOfWeek().getValue();
 
                                     if ((dayOfWeek == postfix) || ((dayOfWeek + 5) == postfix)) {
-                                        log.info("{} {}({}) 부제 운행 제한, 5부제 적용 ", carNo, requestDto.getGateName(), requestDto.getGateId());
+                                        log.info("차량번호 = {}, 통로 = {}({}) 부제 운행 제한, 5부제 적용됨", carNo, requestDto.getGateName(), requestDto.getGateId());
                                         return true;
                                     }
                                 } else {
@@ -416,13 +423,13 @@ public class GatewayService {
                                     if (day < 30) { // 31일은 부제 적용 예외
                                         if (operationLimitSetup == 2) { // 2부제
                                             if ((day % 2) != (postfix % 2)) { // positive 채택
-                                                log.info("{} {}({}) 부제 운행 제한, 2부제 적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
+                                                log.info("차량번호 = {}, 통로 = {}({}) 부제 운행 제한, 2부제 적용됨",carNo,requestDto.getGateName(), requestDto.getGateId());
                                                 return true;
                                             }
 
                                         } else if (operationLimitSetup == 10) { // 10부제
                                             if ((day % 10) == postfix) {
-                                                log.info("{} {}({}) 부제 운행 제한, 10부제 적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
+                                                log.info("차량번호 = {}, 통로 = {}({}) 부제 운행 제한, 10부제 적용됨",carNo,requestDto.getGateName(), requestDto.getGateId());
                                                 return true;
                                             }
                                         }
@@ -430,14 +437,14 @@ public class GatewayService {
                                 }
                             }
                         }
-                        log.info("{} {}({}) 부제 운행 제한, 미적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
+                        log.info("차량번호 = {}, 통로 = {}({}) 부제 운행 제한, 미적용으로 통과됨",carNo,requestDto.getGateName(), requestDto.getGateId());
                         return false;
                     }
 
-                    log.info("{} {}({}) 부제 운행 제한, 미적용 ",carNo,requestDto.getGateName(), requestDto.getGateId());
+                    log.info("차량번호 = {}, 통로 = {}({}) 부제 운행 제한, 미적용으로 통과됨",carNo,requestDto.getGateName(), requestDto.getGateId());
                     return false;
                 }).orElseGet(() -> {
-                    log.info("{}({}) 부제 운행 제한, 데이터 없음 : 미적용 ",requestDto.getGateName(), requestDto.getGateId());
+                    log.info("차량번호 = {}, 통로 = {}({}) , 출입제한, 미적용으로 통과됨 ",requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId());
                     return false;
                 });
     }
@@ -452,7 +459,7 @@ public class GatewayService {
 
         boolean warningCar = warningCarRepository.existsByCarNo(carNo);
         if (warningCar) {
-            log.info("{} 경고 차량차량으로 출입 차단됨",carNo);
+            log.info("차량번호 = {} 경고 차량차량으로 출입 차단됨",carNo);
         }
         return warningCar;
     }

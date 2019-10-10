@@ -64,10 +64,10 @@ public class InterlockService {
 
             gateResponse
                     .doOnError(t -> {
-                        log.error("Gate Server API:{}, gateId:{}", gateServer, gateId, t);
+                        log.error("차단기 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", gateServer, dto.getCarNo(), dto.getGateName(), gateId, t);
                     })
                     .subscribe(s -> {
-                        log.info("Gate Server API:{}, gateId:{}, response:{}", gateServer, gateId, s.getMessage());
+                        log.info("차단기 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", gateServer, dto.getCarNo(), dto.getGateName(), gateId, s.getMessage());
                     });
         }
     }
@@ -96,10 +96,10 @@ public class InterlockService {
 
             signageResponse
                     .doOnError(t -> {
-                        log.error("Signage Server API:{}, carNo:{}", signageInterfaceServer, signageServerRequestDto.getCarNo(), t);
+                        log.error("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
                     })
                     .subscribe(s -> {
-                        log.info("Signage Server API:{}, carNo:{}, response:{}", signageInterfaceServer, signageServerRequestDto.getCarNo(), s.getMessage());
+                        log.info("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
                     });
         }
     }
@@ -136,10 +136,10 @@ public class InterlockService {
 
         localResponse
                 .doOnError(t->{
-                    log.error("Local Server API:{}, carNo:{}",localServer,localServerRequestDto.getCarNo(), t);
+                    log.error("로컬 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", localServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
                 })
                 .subscribe(s-> {
-                    log.info("Local Server API:{}, carNo:{}, response:{}",localServer,localServerRequestDto.getCarNo(),s.getMessage());
+                    log.info("로컬 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", localServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
                 });
     }
 
@@ -170,10 +170,10 @@ public class InterlockService {
 
             homenetResponse
                     .doOnError(t -> {
-                        log.error("Local Server API:{}, carNo:{}", homenetServer, homenetServerRequestDto.getCarNo(), t);
+                        log.error("홈넷 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", homenetServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
                     })
                     .subscribe(s -> {
-                        log.info("Local Server API:{}, carNo:{}, response:{}", homenetServer, homenetServerRequestDto.getCarNo(), s.getMessage());
+                        log.info("홈넷 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", homenetServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
                     });
         }
     }
