@@ -201,8 +201,9 @@ public class GatewayService {
 
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
+
         if (elapseTime > 1) {
-            log.info("수행시간 1초 이상 : " + elapseTime);
+            log.info("Lazy Time : " + elapseTime);
         }
     }
 
