@@ -203,7 +203,7 @@ public class GatewayService {
         long elapseTime  = afterTime - beforeTime;
 
         if (elapseTime > 1) {
-            log.info("Lazy Time : " + elapseTime);
+            log.info("Lazy Log : " + elapseTime);
         }
     }
 
