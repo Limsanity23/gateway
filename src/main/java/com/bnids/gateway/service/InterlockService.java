@@ -96,7 +96,7 @@ public class InterlockService {
 
             signageResponse
                     .doOnError(t -> {
-                        log.error("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
+                        log.error("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
                     })
                     .subscribe(s -> {
                         log.info("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());

@@ -92,6 +92,7 @@ public class GatewayService {
         Integer transitMode = gate.getTransitMode();
 
         log.info("차량번호 = {}, 통로 = {}({}) 출입 시작",carNo,gateName, gateId);
+        long beforeTime = System.currentTimeMillis();
 
         InterlockRequestDto requestDto = InterlockRequestDto.builder()
                 .lprCarNo(lprCarNo)
@@ -196,6 +197,12 @@ public class GatewayService {
                     accessAllowed(requestDto);
                 }
             }
+        }
+
+        long afterTime = System.currentTimeMillis();
+        long elapseTime  = afterTime - beforeTime;
+        if (elapseTime > 1) {
+            log.info("수행시간 1초 이상 : " + elapseTime);
         }
     }
 
