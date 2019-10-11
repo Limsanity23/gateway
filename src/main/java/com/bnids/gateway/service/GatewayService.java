@@ -79,9 +79,7 @@ public class GatewayService {
         Long gateId = lprRequestDto.getGateId();
 
 
-
-
-        SystemSetup systemSetup = findSystemSetup(1L);
+        SystemSetup systemSetup = findSystemSetup();
         Integer logicType = systemSetup.getLogicType();
         Integer operationLimitSetup = systemSetup.getOperationLimitSetup();
 
@@ -203,16 +201,8 @@ public class GatewayService {
         long elapseTime  = afterTime - beforeTime;
 
         if (elapseTime > 1) {
-            log.info("Lazy Log : " + elapseTime);
+            log.info("Lazy Log : 차량번호 = {} {} ms" + requestDto.getCarNo(), elapseTime);
         }
-    }
-
-    /**
-     * 시스템 설정정보 조회
-     * @return 시스템 설정
-     */
-    private SystemSetup findSystemSetup() {
-        return findSystemSetup(1L);
     }
 
     /**
@@ -220,10 +210,10 @@ public class GatewayService {
      * @param systemSetupId 시스템 설정 고유 번호
      * @return 시스템 설정
      */
-    private SystemSetup findSystemSetup(Long systemSetupId) {
-        log.info("시스템 설정 정보 조회 systemSetupId = {}",systemSetupId);
-        return systemSetupRepository.findById(systemSetupId)
-                .orElseThrow(() -> new NotFoundException(String.format("시스템 설정정보가 존재하지 않습니다.[systemSetUpId:%d]",systemSetupId)));
+    private SystemSetup findSystemSetup() {
+        log.info("시스템 설정 정보 조회");
+        return systemSetupRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new NotFoundException("시스템 설정정보가 존재하지 않습니다."));
     }
 
     /**
