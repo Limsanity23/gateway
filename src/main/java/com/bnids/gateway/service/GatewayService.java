@@ -200,8 +200,8 @@ public class GatewayService {
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
 
-        if (elapseTime > 1) {
-            log.info("Lazy Log : 차량번호 = {} {} ms" + requestDto.getCarNo(), elapseTime);
+        if (elapseTime > 1000) {
+            log.info("Lazy Log : 차량번호 = {} {} ms", requestDto.getCarNo(), elapseTime);
         }
     }
 
@@ -363,6 +363,7 @@ public class GatewayService {
 
                         //제한 일자
                         if (carAccessLimit.getLimitBeginDate() == null || carAccessLimit.getLimitEndDate() == null) {
+                            log.info("차량번호 = {}, 통로 = {}({}) 출입제한, 미적용으로 통과됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return false;
                         }
 
@@ -375,6 +376,7 @@ public class GatewayService {
 
                         // 제한시간
                         if (carAccessLimit.getLimitBeginTime() == null || carAccessLimit.getLimitEndTime() == null) {
+                            log.info("차량번호 = {}, 통로 = {}({}) 출입제한, 미적용으로 통과됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return false;
                         }
 

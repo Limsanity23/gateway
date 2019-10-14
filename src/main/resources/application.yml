@@ -33,7 +33,7 @@ management:
 logging:
   level:
     root: info
-    org:
-      hibernate:
-        SQL: DEBUG
-        type: trace
+#    org:
+#      hibernate:
+#        SQL: DEBUG
+#        type: trace

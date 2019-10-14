@@ -87,7 +87,7 @@ public class AppConfig {
     public WebClientCustomizer webClientCustomizer() {
         TcpClient timeoutClient = TcpClient.create()
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) //Connect Timeout
-        .option(ChannelOption.SO_TIMEOUT,1000) // Socket Timeout
+        //.option(ChannelOption.SO_TIMEOUT,1000) // Socket Timeout
         .doOnConnected(
                 c -> c.addHandlerLast(new ReadTimeoutHandler(3))
                         .addHandlerLast(new WriteTimeoutHandler(3)));
@@ -101,7 +101,7 @@ public class AppConfig {
     public WebClient webClient() {
         TcpClient timeoutClient = TcpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) //Connect Timeout
-                .option(ChannelOption.SO_TIMEOUT,1000) // Socket Timeout
+                //.option(ChannelOption.SO_TIMEOUT,1000) // Socket Timeout
                 .doOnConnected(
                         c -> c.addHandlerLast(new ReadTimeoutHandler(3))
                                 .addHandlerLast(new WriteTimeoutHandler(3)));
