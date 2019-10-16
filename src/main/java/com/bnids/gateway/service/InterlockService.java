@@ -115,6 +115,7 @@ public class InterlockService {
                 .carNo(dto.getCarNo())
                 .lprCarNo(dto.getLprCarNo())
                 .gateId(dto.getGateId())
+                .gateName(dto.getGateName())
                 .gateType(dto.getGateType())
                 .carSection(dto.getCarSection())
                 .gateStatus(dto.getGateStatus())
@@ -123,6 +124,7 @@ public class InterlockService {
                 .visitPlaceName(dto.getVisitName())
                 .addressDong(dto.getAddressDong())
                 .addressHo(dto.getAddressHo())
+                .siteCode(dto.getSiteCode())
                 .build();
 
         String localServer = appSetting.getLocalServer();

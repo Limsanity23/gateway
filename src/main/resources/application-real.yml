@@ -35,5 +35,5 @@ bnids-app:
     signageInterfaceServer: 'http://signage.local.happyparking.co.kr/signage/api/signal/transit'
     gateControlServer: 'http://gate.local.happyparking.co.kr/gate/api/gate'
     pushServer: 'http://push.happyparking.co.kr'
-    homenetInterfaceServer: 'http://homenet.local.happyparking.co.kr/homenet'
+    homenetInterfaceServer: 'http://homenet.local.happyparking.co.kr/homenet/api/transit'
 

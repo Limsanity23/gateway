@@ -48,5 +48,6 @@ public class InterlockRequestDto {
     private String addressHo;
     private String noticeSetup;
     private String installOption;
+    private String siteCode;
 }
 

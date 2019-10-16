@@ -35,6 +35,7 @@ public class LocalServerRequestDto {
     private String carNo;
     private String lprCarNo;
     private Long gateId;
+    private String gateName;
     private Integer gateType;
     private Long carSection;
     private Integer gateStatus;
@@ -43,4 +44,5 @@ public class LocalServerRequestDto {
     private String visitPlaceName;
     private String addressDong;
     private String addressHo;
+    private String siteCode;
 }

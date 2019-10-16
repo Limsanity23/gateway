@@ -100,7 +100,8 @@ public class GatewayService {
                 .gateType(gate.getGateType())
                 .installOption(systemSetup.getInstallOption())
                 .carImage(lprRequestDto.getCarImage())
-                .plateType(lprRequestDto.getPlateType()).build();
+                .plateType(lprRequestDto.getPlateType())
+                .siteCode(systemSetup.getSiteCode()).build();
 
         if (StringUtils.contains(lprCarNo, "미인식")) {
             requestDto.setCarSection(1L);
@@ -130,10 +131,12 @@ public class GatewayService {
                         if (appVisitCar == null) {
                             requestDto.setCarSection(2L);
                         } else {
+
                             requestDto.setCarSection(3L);
                             requestDto.setTelNo(appVisitCar.getVisitTelNo());
                             requestDto.setVisitName(appVisitCar.getVisitorName());
-
+                            requestDto.setAddressDong(appVisitCar.getAddressDong());
+                            requestDto.setAddressHo(appVisitCar.getAddressHo());
                             isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                         }
                     }
@@ -207,7 +210,6 @@ public class GatewayService {
 
     /**
      * 시스템 설정정보 조회
-     * @param systemSetupId 시스템 설정 고유 번호
      * @return 시스템 설정
      */
     private SystemSetup findSystemSetup() {
@@ -266,7 +268,7 @@ public class GatewayService {
             Stream<RegistCar> stream = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo()));
 
             if (stream.count() == 0) { // 완전히 일차하는 차량이 없을 경우
-                log.info("차랭번호 = {}({}) : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
+                log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
                 return registCarList.get(0);
             } else { // 완전히 일차하는 차량이 존재
                 log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);

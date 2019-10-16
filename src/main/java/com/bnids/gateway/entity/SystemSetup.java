@@ -41,6 +41,9 @@ public class SystemSetup extends AuditModel<Long> {
     @Column
     private Long systemSetupId;
 
+    @Column(nullable = false, length = 20)
+    private String siteCode;
+
     @Column
     private Integer operationLimitSetup;
 
