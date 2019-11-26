@@ -45,4 +45,5 @@ public class LocalServerRequestDto {
     private String addressDong;
     private String addressHo;
     private String siteCode;
+    private String installOption;
 }

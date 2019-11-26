@@ -513,7 +513,7 @@ public class GatewayService {
 
             if (region > 0 && region < 70) {
                 taxiType = 7L;
-            } else if (region >= 70 && region < 80) {
+            } else if (region > 70 && region < 80) {
                 taxiType = 8L;
             } else if (region >= 80 && region < 99) {
                 taxiType = 9L;

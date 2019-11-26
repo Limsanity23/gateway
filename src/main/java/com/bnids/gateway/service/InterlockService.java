@@ -125,6 +125,7 @@ public class InterlockService {
                 .addressDong(dto.getAddressDong())
                 .addressHo(dto.getAddressHo())
                 .siteCode(dto.getSiteCode())
+                .installOption(dto.getInstallOption())
                 .build();
 
         String localServer = appSetting.getLocalServer();
