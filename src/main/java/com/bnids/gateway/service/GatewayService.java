@@ -104,6 +104,7 @@ public class GatewayService {
                 .siteCode(systemSetup.getSiteCode()).build();
 
         if (StringUtils.contains(lprCarNo, "미인식")) {
+            requestDto.setCarNo("미인식"+System.currentTimeMillis());
             requestDto.setCarSection(1L);
             if (transitMode == 3) {
                 // 무조건 통과인 경우만 출입 허용
