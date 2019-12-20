@@ -127,7 +127,7 @@ public class GatewayService {
                     } else {
                         // 에약 방문 차량 조회
                         LocalDateTime currentTime = LocalDateTime.now();
-                        AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(carNo, currentTime, currentTime);
+                        AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, currentTime.minusHours(2), currentTime.plusHours(2));
 
                         if (appVisitCar == null) {
                             requestDto.setCarSection(2L);
