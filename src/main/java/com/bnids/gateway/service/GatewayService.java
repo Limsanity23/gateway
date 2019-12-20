@@ -127,7 +127,7 @@ public class GatewayService {
                     } else {
                         // 에약 방문 차량 조회
                         LocalDateTime currentTime = LocalDateTime.now();
-                        AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, currentTime.minusHours(2), currentTime.plusHours(2));
+                        AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, currentTime.minusHours(1), currentTime.plusHours(1));
 
                         if (appVisitCar == null) {
                             requestDto.setCarSection(2L);
@@ -499,7 +499,7 @@ public class GatewayService {
     private long getTaxiType(String carNo) {
         long taxiType = 0L;
 
-        String[] symbols = {"바", "사", "아", "자"};
+        String[] symbols = {"바", "사", "아", "자", "배"};
         boolean findSymbol = false;
 
         for (String symbol : symbols) {
