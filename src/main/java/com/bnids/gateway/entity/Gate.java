@@ -61,6 +61,9 @@ public class Gate extends AuditModel<Long> {
 
     @Column
     private Integer transitMode;
+
+    @Column(length = 1000)
+    private String installDevice;
     
     @JsonIgnore
     @Override
