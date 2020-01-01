@@ -98,7 +98,8 @@ public class GatewayService {
                 .gateId(gateId)
                 .gateName(gate.getGateName())
                 .gateType(gate.getGateType())
-                .installOption(gate.getInstallDevice())
+                .installOption(systemSetup.getInstallOption())
+                .installDevice(gate.getInstallDevice())
                 .carImage(lprRequestDto.getCarImage())
                 .plateType(lprRequestDto.getPlateType())
                 .siteCode(systemSetup.getSiteCode()).build();

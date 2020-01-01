@@ -53,7 +53,7 @@ public class InterlockService {
      * @param dto 연동요청 Dto
      */
     public void sendGateServer(InterlockRequestDto dto) {
-        if (StringUtils.contains(dto.getInstallOption(), "BLDC_GATE")) {
+        if (StringUtils.contains(dto.getInstallDevice(), "BLDC_GATE")) {
             String gateServer = appSetting.getGateControlServer();
             Long gateId = dto.getGateId();
 
@@ -79,7 +79,7 @@ public class InterlockService {
      * @param dto 연동요청 Dto
      */
     public void sendSignageServer(InterlockRequestDto dto) {
-        if (StringUtils.contains(dto.getInstallOption(), "SIGNAGE")) {
+        if (StringUtils.contains(dto.getInstallDevice(), "SIGNAGE")) {
             SignageServerRequestDto signageServerRequestDto = SignageServerRequestDto.builder()
                     .carNo(dto.getCarNo())
                     .gateId(dto.getGateId())
