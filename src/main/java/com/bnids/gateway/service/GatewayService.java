@@ -144,6 +144,7 @@ public class GatewayService {
                     }
                 } else {
                     requestDto.setRegistCarId(registCar.getRegistCarId());
+                    requestDto.setCarNo(registCar.getCarNo());
                     requestDto.setCarSection(registCar.getRegistItem());
                     requestDto.setTelNo(registCar.getTelNo());
                     requestDto.setVisitName(registCar.getOwnerName());
@@ -178,6 +179,7 @@ public class GatewayService {
                     requestDto.setCarSection(2L);
                 } else {
                     requestDto.setRegistCarId(registCar.getRegistCarId());
+                    requestDto.setCarNo(registCar.getCarNo());
                     requestDto.setCarSection(registCar.getRegistItem());
                     requestDto.setTelNo(registCar.getTelNo());
                     requestDto.setVisitName(registCar.getOwnerName());
