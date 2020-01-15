@@ -39,6 +39,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -269,14 +270,17 @@ public class GatewayService {
             log.info("차량번호 = {}({}) : 1건 조회됨", carNo, digitCarNo);
             return registCarList.get(0);
         } else { // 결과가 2개 이상
-            Stream<RegistCar> stream = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo()));
+            //Stream<RegistCar> stream = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo())).findFirst();
 
-            if (stream.count() == 0) { // 완전히 일차하는 차량이 없을 경우
+            Optional<RegistCar> registCarOptional = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo())).findFirst();
+
+            if (registCarOptional.isPresent()) { // 완전히 일차하는 차량이  존재
+                log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
+                return registCarOptional.get();
+            } else { // 완전히 일차하는 차량이 없음
                 log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
                 return registCarList.get(0);
-            } else { // 완전히 일차하는 차량이 존재
-                log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
-                return stream.findFirst().get();
+
             }
         }
     }
