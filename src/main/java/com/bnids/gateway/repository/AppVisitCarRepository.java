@@ -37,6 +37,6 @@ import java.util.Optional;
  */
 public interface AppVisitCarRepository extends BaseJPARepository<AppVisitCar, Long> {
     //boolean findByAppVisitCarId(Long appVisitCarId);
-    AppVisitCar findByVisitCarNoAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(String visitCarNo, LocalDateTime today1, LocalDateTime today2);
+    List<AppVisitCar> findByVisitCarNoAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(String visitCarNo, LocalDateTime today1, LocalDateTime today2);
     AppVisitCar findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(String visitCarNo, LocalDateTime today1, LocalDateTime today2);
 }
