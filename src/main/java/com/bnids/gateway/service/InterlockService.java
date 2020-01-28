@@ -153,7 +153,7 @@ public class InterlockService {
      * @param dto 연동요청 Dto
      */
     public void sendHomenetServer(InterlockRequestDto dto) {
-        if (StringUtils.contains(dto.getInstallOption(), "HOMENET")
+        if (StringUtils.contains(dto.getInstallDevice(), "HOMENET")
                 && StringUtils.contains(dto.getNoticeSetup(),"HOMENET")) {
             HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
                     .carNo(dto.getCarNo())
