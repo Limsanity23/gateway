@@ -99,11 +99,7 @@ public class InterlockService {
                         log.error("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
                     })
                     .subscribe(s -> {
-                        if ("FAIL".equals(s.getData())) {
-                            log.info("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getData());
-                        } else {
-                            log.error("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getData());
-                        }
+                        log.info("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getData());
                     });
         }
     }
