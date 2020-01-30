@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -73,6 +74,7 @@ public class GatewayService {
     @NonNull
     private final InterlockService interlockService;
 
+    @Transactional(readOnly = true)
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
         String lprCarNo = accuracy == 0 ? "미인식" : lprRequestDto.getLprCarNo();
