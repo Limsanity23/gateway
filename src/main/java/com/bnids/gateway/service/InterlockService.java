@@ -154,7 +154,7 @@ public class InterlockService {
      */
     public void sendHomenetServer(InterlockRequestDto dto) {
         if (StringUtils.contains(dto.getInstallDevice(), "HOMENET")
-                && StringUtils.contains(dto.getNoticeSetup(),"HOMENET")) {
+                && dto.getCarSection() == 10 && StringUtils.contains(dto.getNoticeSetup(),"HOMENET")) {
             HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
                     .carNo(dto.getCarNo())
                     .gateType(dto.getGateType())

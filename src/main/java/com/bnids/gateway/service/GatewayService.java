@@ -74,7 +74,6 @@ public class GatewayService {
     @NonNull
     private final InterlockService interlockService;
 
-    @Transactional(readOnly = true)
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
         String lprCarNo = accuracy == 0 ? "미인식" : lprRequestDto.getLprCarNo();
