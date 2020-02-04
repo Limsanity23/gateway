@@ -67,7 +67,7 @@ public class InterlockService {
                         log.error("차단기 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", gateServer, dto.getCarNo(), dto.getGateName(), gateId, t);
                     })
                     .subscribe(s -> {
-                        log.info("차단기 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", gateServer, dto.getCarNo(), dto.getGateName(), gateId, s.getMessage());
+                        log.info("차단기 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", gateServer, dto.getCarNo(), dto.getGateName(), gateId, s.getData());
                     });
         }
     }
@@ -99,7 +99,7 @@ public class InterlockService {
                         log.error("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
                     })
                     .subscribe(s -> {
-                        log.info("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getData());
+                        log.info("전광판 연동 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", signageInterfaceServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
                     });
         }
     }
