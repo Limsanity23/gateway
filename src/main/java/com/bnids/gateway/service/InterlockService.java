@@ -130,12 +130,12 @@ public class InterlockService {
 
         String localServer = appSetting.getLocalServer();
 
-        Mono<InterlockResponseDto> localResponse  = webClient.post()
+        Mono<LocalServerResponseDto> localResponse  = webClient.post()
                 .uri(localServer)
                 .syncBody(localServerRequestDto)
                 //.body(BodyInserters.fromObject(localServerRequestDto))
                 .retrieve()
-                .bodyToMono(InterlockResponseDto.class);
+                .bodyToMono(LocalServerResponseDto.class);
 
         localResponse
                 .doOnError(t->{
