@@ -31,7 +31,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LocalServerResponseDto {
+public class GateServerResponseDto {
     private String code;
     private String message;
+    private String data;
 }

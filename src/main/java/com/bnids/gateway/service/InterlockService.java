@@ -57,10 +57,10 @@ public class InterlockService {
             String gateServer = appSetting.getGateControlServer();
             Long gateId = dto.getGateId();
 
-            Mono<InterlockResponseDto> gateResponse = webClient.get()
+            Mono<GateServerResponseDto> gateResponse = webClient.get()
                     .uri(gateServer + "/{gateId}", gateId)
                     .retrieve()
-                    .bodyToMono(InterlockResponseDto.class);
+                    .bodyToMono(GateServerResponseDto.class);
 
             gateResponse
                     .doOnError(t -> {
@@ -130,12 +130,12 @@ public class InterlockService {
 
         String localServer = appSetting.getLocalServer();
 
-        Mono<LocalServerResponseDto> localResponse  = webClient.post()
+        Mono<InterlockResponseDto> localResponse  = webClient.post()
                 .uri(localServer)
                 .syncBody(localServerRequestDto)
                 //.body(BodyInserters.fromObject(localServerRequestDto))
                 .retrieve()
-                .bodyToMono(LocalServerResponseDto.class);
+                .bodyToMono(InterlockResponseDto.class);
 
         localResponse
                 .doOnError(t->{

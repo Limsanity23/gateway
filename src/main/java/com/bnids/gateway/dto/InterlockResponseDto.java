@@ -34,5 +34,4 @@ import lombok.*;
 public class InterlockResponseDto {
     private String code;
     private String message;
-    private String data;
 }

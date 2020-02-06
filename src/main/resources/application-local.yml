@@ -1,7 +1,7 @@
 spring:
   datasource:
     hikari: #https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby
-      jdbcUrl: jdbc:mariadb://118.131.237.204:3306/local_db?useUnicode=true&characterEncoding=utf8
+      jdbcUrl: jdbc:mariadb://172.20.0.21:3306/local_db?useUnicode=true&characterEncoding=utf8
       username: bnids
       password: qldps_2020
       driver-class-name: org.mariadb.jdbc.Driver
@@ -28,7 +28,7 @@ spring:
 
 bnids-app:
   servers:
-    localServer: 'http://172.20.0.21/local/api/gateway'
+    localServer: 'http://localhost:12000/local/api/gateway'
     signage-interface-server: 'http://172.20.0.21/signage/api/signal/transit'
     gateControlServer: 'http://172.20.0.21/gate/api/gate'
     push-server: 'http://push.happyparking.co.kr'
