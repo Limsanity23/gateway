@@ -89,7 +89,7 @@ public class AppConfig {
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) //Connect Timeout
         //.option(ChannelOption.SO_TIMEOUT,1000) // Socket Timeout
         .doOnConnected(
-                c -> c.addHandlerLast(new ReadTimeoutHandler(10))
+                c -> c.addHandlerLast(new ReadTimeoutHandler(3))
                         .addHandlerLast(new WriteTimeoutHandler(3)));
 
         return webClientBuilder -> webClientBuilder
@@ -103,7 +103,7 @@ public class AppConfig {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) //Connect Timeout
                 //.option(ChannelOption.SO_TIMEOUT,1000) // Socket Timeout
                 .doOnConnected(
-                        c -> c.addHandlerLast(new ReadTimeoutHandler(10))
+                        c -> c.addHandlerLast(new ReadTimeoutHandler(3))
                                 .addHandlerLast(new WriteTimeoutHandler(3)));
 
         return WebClient.builder()
