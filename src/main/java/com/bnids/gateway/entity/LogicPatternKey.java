@@ -23,35 +23,10 @@
 
 package com.bnids.gateway.entity;
 
-import lombok.*;
-
-import javax.persistence.*;
 import java.io.Serializable;
 
-/**
- * @author yannishin
- */
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Entity
-@Table
-@IdClass(LogicPatternKey.class)
-public class LogicPattern implements Serializable {
-    @Id
-    @Column
+public class LogicPatternKey implements Serializable {
     private Short logicCode;
-
-    @Id
-    @Column
     private Long registCarId;
-
-    @Id
-    @Column
     private Integer sn;
-
-    @Column(length = 10, nullable = false)
-    private String logicPattern;
 }
