@@ -72,6 +72,9 @@ public class GatewayService {
     private final GateRepository gateRepository;
 
     @NonNull
+    private final LogicPatternRepository logicPatternRepository;
+
+    @NonNull
     private final InterlockService interlockService;
 
     public void interlock(LprRequestDto lprRequestDto) {
@@ -128,14 +131,27 @@ public class GatewayService {
                         requestDto.setCarSection(taxiType);
                         isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                     } else {
+
                         // 에약 방문 차량 조회
                         LocalDateTime currentTime = LocalDateTime.now();
                         AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, currentTime.minusHours(1), currentTime.plusHours(1));
 
                         if (appVisitCar == null) {
-                            requestDto.setCarSection(2L);
-                        } else {
+                            log.info("개별 로직 판별");
+                            // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
+                            List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
+                            if (logicPatterns.size() == 0) { //모든 개별로직에 부합하지 않음
+                                requestDto.setCarSection(2L);
+                            }else{
+                                final LogicPattern logicPattern = logicPatterns.get(0);
+                                log.info("개별로직에 검색돤 차량이 {}대 있음", logicPatterns.size());
+                                registCar = findRegistCar(logicPattern.getRegistCarId());
+                                log.info("LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", logicPattern.getLogicPattern(), registCar.getCarNo());
+                                requestDto.setBy(registCar);
+                                isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
+                            }
 
+                        } else {
                             requestDto.setCarSection(3L);
                             requestDto.setTelNo(appVisitCar.getVisitTelNo());
                             requestDto.setVisitName(appVisitCar.getVisitorName());
@@ -145,15 +161,8 @@ public class GatewayService {
                         }
                     }
                 } else {
-                    requestDto.setRegistCarId(registCar.getRegistCarId());
-                    requestDto.setCarNo(registCar.getCarNo());
-                    requestDto.setCarSection(registCar.getRegistItem());
-                    requestDto.setTelNo(registCar.getTelNo());
-                    requestDto.setVisitName(registCar.getOwnerName());
-                    requestDto.setAddressDong(registCar.getAddressDong());
-                    requestDto.setAddressHo(registCar.getAddressHo());
-                    requestDto.setNoticeSetup(registCar.getNoticeSetup());
 
+                    requestDto.setBy(registCar);
                     isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                 }
 
@@ -180,14 +189,7 @@ public class GatewayService {
                 if (registCar == null) {
                     requestDto.setCarSection(2L);
                 } else {
-                    requestDto.setRegistCarId(registCar.getRegistCarId());
-                    requestDto.setCarNo(registCar.getCarNo());
-                    requestDto.setCarSection(registCar.getRegistItem());
-                    requestDto.setTelNo(registCar.getTelNo());
-                    requestDto.setVisitName(registCar.getOwnerName());
-                    requestDto.setAddressDong(registCar.getAddressDong());
-                    requestDto.setAddressHo(registCar.getAddressHo());
-                    requestDto.setNoticeSetup(registCar.getNoticeSetup());
+                    requestDto.setBy(registCar);
                 }
 
                 if (transitMode == 2) { // 인식후 통과
@@ -249,6 +251,16 @@ public class GatewayService {
         } else {
             return findRegistCarByDigitCarNo(carNo, now);
         }
+    }
+
+    /**
+     * 등록 차량 정보
+     *
+     * @param registCarId id값
+     * @return 등록차량
+     */
+    private RegistCar findRegistCar(Long registCarId) {
+        return registCarRepository.getOne(registCarId);
     }
 
     /**

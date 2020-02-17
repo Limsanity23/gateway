@@ -21,37 +21,19 @@
  *  For more information on this product, please see www.bnids.com
  */
 
-package com.bnids.gateway.entity;
+package com.bnids.gateway.repository;
 
-import lombok.*;
+import com.bnids.gateway.entity.LogicPattern;
+import com.bnids.gateway.entity.LogicPatternKey;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import javax.persistence.*;
-import java.io.Serializable;
+import java.util.List;
 
-/**
- * @author yannishin
- */
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Entity
-@Table
-@IdClass(LogicPatternKey.class)
-public class LogicPattern implements Serializable {
-    @Id
-    @Column
-    private Short logicCode;
+public interface LogicPatternRepository extends JpaRepository<LogicPattern, LogicPatternKey> {
 
-    @Id
-    @Column
-    private Long registCarId;
-
-    @Id
-    @Column
-    private Integer sn;
-
-    @Column(length = 10, nullable = false)
-    private String logicPattern;
+    @Query(value = "select * from local_db.LogicPattern where :carNo regexp logic_pattern order by logicCode, sn", nativeQuery=true)
+    List<LogicPattern> findLogicPatternBycarNo(@Param("carNo") String carNo);
 }
+
