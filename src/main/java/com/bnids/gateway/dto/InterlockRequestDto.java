@@ -51,6 +51,7 @@ public class InterlockRequestDto {
     private String installOption;
     private String installDevice;
     private String siteCode;
+    private String ownerName;
 
     public void setBy(RegistCar registCar) {
         this.setRegistCarId(registCar.getRegistCarId());
@@ -61,6 +62,7 @@ public class InterlockRequestDto {
         this.setAddressDong(registCar.getAddressDong());
         this.setAddressHo(registCar.getAddressHo());
         this.setNoticeSetup(registCar.getNoticeSetup());
+        this.setOwnerName(registCar.getOwnerName());
     }
 }
 

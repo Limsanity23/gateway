@@ -158,8 +158,10 @@ public class InterlockService {
             HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
                     .carNo(dto.getCarNo())
                     .gateType(dto.getGateType())
+                    .gateName(dto.getGateName())
                     .addressDong(dto.getAddressDong())
                     .addressHo(dto.getAddressHo())
+                    .ownerName(dto.getOwnerName())
                     .build();
 
             String homenetServer = appSetting.getHomenetInterfaceServer();

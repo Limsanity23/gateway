@@ -34,6 +34,8 @@ import lombok.Setter;
 public class HomenetServerRequestDto {
     private String carNo;
     private Integer gateType;
+    private String gateName;
     private String addressDong;
     private String addressHo;
+    private String ownerName;
 }
