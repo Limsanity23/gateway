@@ -133,8 +133,7 @@ public class GatewayService {
                     } else {
 
                         // 에약 방문 차량 조회
-                        LocalDateTime currentTime = LocalDateTime.now();
-                        AppVisitCar appVisitCar = appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, currentTime.minusHours(1), currentTime.plusHours(1));
+                        AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
 
                         if (appVisitCar == null) {
                             log.info("개별 로직 판별");
@@ -306,7 +305,7 @@ public class GatewayService {
      */
     private AppVisitCar findAppVisitCar(String carNo) {
         LocalDateTime today = LocalDateTime.now();
-        return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtAfterAndAccessPeriodEndDtBefore(carNo, today, today).stream().findFirst().get();
+        return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.minusHours(1), today.plusHours(1)).stream().findFirst().get();
     }
 
     /**
