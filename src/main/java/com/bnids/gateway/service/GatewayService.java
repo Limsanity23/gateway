@@ -305,7 +305,7 @@ public class GatewayService {
      */
     private AppVisitCar findAppVisitCar(String carNo) {
         LocalDateTime today = LocalDateTime.now();
-        return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.minusHours(1), today.plusHours(1)).stream().findFirst().get();
+        return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream().findFirst().get();
     }
 
     /**
