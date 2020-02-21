@@ -33,7 +33,7 @@ import java.util.List;
 
 public interface LogicPatternRepository extends JpaRepository<LogicPattern, LogicPatternKey> {
 
-    @Query(value = "select * from local_db.logic_pattern where :carNo regexp logic_pattern order by logicCode, sn", nativeQuery=true)
+    @Query(value = "select * from local_db.logic_pattern where :carNo regexp logic_pattern order by logic_code, sn", nativeQuery=true)
     List<LogicPattern> findLogicPatternBycarNo(@Param("carNo") String carNo);
 }
 
