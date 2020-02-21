@@ -40,6 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -131,11 +132,17 @@ public class GatewayService {
                         requestDto.setCarSection(taxiType);
                         isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                     } else {
+                        try {
+                            // 에약 방문 차량 조회
+                            AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
+                            requestDto.setCarSection(3L);
+                            requestDto.setTelNo(appVisitCar.getVisitTelNo());
+                            requestDto.setVisitName(appVisitCar.getVisitorName());
+                            requestDto.setAddressDong(appVisitCar.getAddressDong());
+                            requestDto.setAddressHo(appVisitCar.getAddressHo());
+                            isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
 
-                        // 에약 방문 차량 조회
-                        AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
-
-                        if (appVisitCar == null) {
+                        } catch (NoSuchElementException e) {
                             log.info("개별 로직 판별");
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
@@ -149,14 +156,6 @@ public class GatewayService {
                                 requestDto.setBy(registCar);
                                 isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                             }
-
-                        } else {
-                            requestDto.setCarSection(3L);
-                            requestDto.setTelNo(appVisitCar.getVisitTelNo());
-                            requestDto.setVisitName(appVisitCar.getVisitorName());
-                            requestDto.setAddressDong(appVisitCar.getAddressDong());
-                            requestDto.setAddressHo(appVisitCar.getAddressHo());
-                            isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                         }
                     }
                 } else {
