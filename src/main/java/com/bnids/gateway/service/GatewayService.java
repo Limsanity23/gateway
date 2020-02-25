@@ -133,9 +133,9 @@ public class GatewayService {
                         isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                     } else {
                         // 에약 방문 차량 조회
-                        Optional<AppVisitCar> appVisitCar = this.findAppVisitCar(carNo);
+                        AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
 
-                        if (appVisitCar.isEmpty()) {
+                        if (appVisitCar == null) {
                             log.info("개별 로직 판별");
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
@@ -151,11 +151,7 @@ public class GatewayService {
                             }
 
                         } else {
-                            requestDto.setCarSection(3L);
-                            requestDto.setTelNo(appVisitCar.get().getVisitTelNo());
-                            requestDto.setVisitName(appVisitCar.get().getVisitorName());
-                            requestDto.setAddressDong(appVisitCar.get().getAddressDong());
-                            requestDto.setAddressHo(appVisitCar.get().getAddressHo());
+                            requestDto.setBy(appVisitCar);
                             isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                         }
                     }
@@ -186,7 +182,13 @@ public class GatewayService {
                 RegistCar registCar = findRegistCar(carNo, logicType);
 
                 if (registCar == null) {
-                    requestDto.setCarSection(2L);
+                    AppVisitCar appVisitCar = findAppVisitCar(carNo);
+
+                    if (appVisitCar == null) {
+                        requestDto.setCarSection(2L);
+                    } else {
+                        requestDto.setBy(appVisitCar);
+                    }
                 } else {
                     requestDto.setBy(registCar);
                 }
@@ -303,9 +305,10 @@ public class GatewayService {
      * @param carNo 차량번호
      * @return 앱 방문 차량
      */
-    private Optional<AppVisitCar> findAppVisitCar(String carNo) {
+    private AppVisitCar findAppVisitCar(String carNo) {
         LocalDateTime today = LocalDateTime.now();
-        return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream().findFirst();
+        return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream()
+                .findFirst().orElse(null);
     }
 
     /**

@@ -22,6 +22,7 @@
  */
 package com.bnids.gateway.dto;
 
+import com.bnids.gateway.entity.AppVisitCar;
 import com.bnids.gateway.entity.RegistCar;
 import lombok.Builder;
 import lombok.Getter;
@@ -63,6 +64,15 @@ public class InterlockRequestDto {
         this.setAddressHo(registCar.getAddressHo());
         this.setNoticeSetup(registCar.getNoticeSetup());
         this.setOwnerName(registCar.getOwnerName());
+    }
+
+    public void setBy(AppVisitCar appVisitCar) {
+        this.setCarSection(3L);
+        this.setTelNo(appVisitCar.getVisitTelNo());
+        this.setVisitName(appVisitCar.getVisitorName());
+        this.setAddressDong(appVisitCar.getAddressDong());
+        this.setAddressHo(appVisitCar.getAddressHo());
+
     }
 }
 
