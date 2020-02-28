@@ -35,5 +35,8 @@ public interface LogicPatternRepository extends JpaRepository<LogicPattern, Logi
 
     @Query(value = "select * from local_db.logic_pattern where :carNo regexp logic_pattern order by logic_code, sn", nativeQuery=true)
     List<LogicPattern> findLogicPatternBycarNo(@Param("carNo") String carNo);
+
+    @Query(value = "select p from LogicPattern p where :carNo = p.logicPattern")
+    List<LogicPattern> findLogicPatternByExactCarNo(@Param("carNo") String carNo);
 }
 

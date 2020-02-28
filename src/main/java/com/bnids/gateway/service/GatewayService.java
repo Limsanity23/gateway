@@ -157,8 +157,8 @@ public class GatewayService {
                     }
                 } else {
 
-                    requestDto.setBy(registCar);
-                    isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
+                        requestDto.setBy(registCar);
+                        isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                 }
 
 
@@ -293,6 +293,14 @@ public class GatewayService {
                 return registCarOptional.get();
             } else { // 완전히 일차하는 차량이 없음
                 log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
+
+                // 완전 일치 강제 패턴에 등록되어 있나?
+                List<LogicPattern> exactCarNos = logicPatternRepository.findLogicPatternByExactCarNo(carNo);
+                if (exactCarNos.size() > 0) {
+                    log.info("차량번호 = {}({}) : 해당 차번호는 완전일치 강제로 패턴 등록 됨 ", carNo, digitCarNo);
+                    return null;
+                }
+                log.info("차량번호 = {}({}) : 다건 중 첫번째 일치 차량 선택", registCarList.get(0).getCarNo(), digitCarNo);
                 return registCarList.get(0);
 
             }
