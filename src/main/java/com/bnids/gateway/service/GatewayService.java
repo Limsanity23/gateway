@@ -235,7 +235,7 @@ public class GatewayService {
     private Gate findGate(Long gateId) {
         log.info("통로 정보 조회 gateId = {}",gateId);
         return gateRepository.findById(gateId)
-                .orElseThrow(() -> new NotFoundException(String.format("통로가  존재하지 않습니다.[gateId:%d]",1L)));
+                .orElseThrow(() -> new NotFoundException(String.format("통로가 존재하지 않습니다.[gateId:%d]",1L)));
     }
 
     /**

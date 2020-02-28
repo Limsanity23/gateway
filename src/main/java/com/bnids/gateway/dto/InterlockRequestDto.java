@@ -72,7 +72,6 @@ public class InterlockRequestDto {
         this.setVisitName(appVisitCar.getVisitorName());
         this.setAddressDong(appVisitCar.getAddressDong());
         this.setAddressHo(appVisitCar.getAddressHo());
-
     }
 }
 
