@@ -280,11 +280,22 @@ public class GatewayService {
             return null;
         }
 
-        if(registCarList.size() == 1) { // 결과가 1개이면
-            log.info("차량번호 = {}({}) : 1건 조회됨", carNo, digitCarNo);
-            return registCarList.get(0);
-        } else { // 결과가 2개 이상
-            //Stream<RegistCar> stream = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo())).findFirst();
+        if(registCarList.size() == 1) { // 숫자일치 결과가 1개이면
+            log.info("차량번호 = {}({}) : 숫자일치 1건 조회됨", carNo, digitCarNo);
+            RegistCar registCar = registCarList.get(0);
+
+            if (registCar.getCarNo().equals(carNo)) { //완전 일치
+                return registCar;
+            }else{ //숫자만 일치
+                // 완전 일치 강제 패턴에 등록되어 있나?
+                if (this.hasExactCarNoPattern(carNo)) {
+                    log.info("차량번호 = {}({}) : 인식된 이 번호는 완전일치 강제로 패턴 등록 되었으나 숫자만 일치됨 ", carNo, digitCarNo);
+                    return null;
+                }
+            }
+            return registCar;
+
+        } else { // 숫자일치 결과가 2개 이상
 
             Optional<RegistCar> registCarOptional = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo())).findFirst();
 
@@ -292,19 +303,32 @@ public class GatewayService {
                 log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
                 return registCarOptional.get();
             } else { // 완전히 일차하는 차량이 없음
-                log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 없음 ", carNo, digitCarNo);
 
-                // 완전 일치 강제 패턴에 등록되어 있나?
-                List<LogicPattern> exactCarNos = logicPatternRepository.findLogicPatternByExactCarNo(carNo);
-                if (exactCarNos.size() > 0) {
-                    log.info("차량번호 = {}({}) : 해당 차번호는 완전일치 강제로 패턴 등록 됨 ", carNo, digitCarNo);
-                    return null;
+                // 숫자일치 목록중 완전 일치 강제 패턴에 등록되지 않은 차량이 있나?
+                Optional<RegistCar> registCarAvailable = registCarList.stream().filter(registCar -> this.hasExactCarNoPattern(registCar.getCarNo())).findFirst();
+
+                if (registCarAvailable.isPresent()) {
+                    log.info("차량번호 = {}({}) : 숫자일치 목록중 완전 일치 강제 패턴에 등록되지 않은 차량 있음. 첫번째 선택.", registCarAvailable.get().getCarNo(), digitCarNo);
+                    return registCarAvailable.get();
                 }
-                log.info("차량번호 = {}({}) : 다건 중 첫번째 일치 차량 선택", registCarList.get(0).getCarNo(), digitCarNo);
-                return registCarList.get(0);
-
+                log.info("차량번호 = {}({}) : 숫자일치 목록중 완전 일치 강제 패턴에 등록되지 않은 차량 없음 ", carNo, digitCarNo);
+                return null;
             }
         }
+    }
+
+    /**
+     * 완전일치 강제 패턴 등록 여부
+     *
+     * @param carNo 차량번호
+     * @return 등록 여부
+     */
+    private boolean hasExactCarNoPattern(String carNo) {
+        List<LogicPattern> exactCarNos = logicPatternRepository.findLogicPatternByExactCarNo(carNo);
+        if (exactCarNos.size() > 0) {
+            return true;
+        }
+        return false;
     }
 
     /**
