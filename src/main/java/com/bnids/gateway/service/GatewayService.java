@@ -136,16 +136,16 @@ public class GatewayService {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
 
                         if (appVisitCar == null) {
-                            log.info("개별 로직 판별");
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
-                            if (logicPatterns.size() == 0) { //모든 개별로직에 부합하지 않음
+                            if (logicPatterns.size() == 0) {
+                                log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음",carNo,gateName, gateId);
                                 requestDto.setCarSection(2L);
                             }else{
                                 final LogicPattern logicPattern = logicPatterns.get(0);
-                                log.info("개별로직에 검색돤 차량이 {}대 있음", logicPatterns.size());
+                                log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}",carNo,gateName, gateId, logicPatterns.size());
                                 registCar = findRegistCar(logicPattern.getRegistCarId());
-                                log.info("LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", logicPattern.getLogicPattern(), registCar.getCarNo());
+                                log.info("차량번호 = {}, 통로 = {}({}) LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", carNo,gateName, gateId, logicPattern.getLogicPattern(), registCar.getCarNo());
                                 requestDto.setBy(registCar);
                                 isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                             }
