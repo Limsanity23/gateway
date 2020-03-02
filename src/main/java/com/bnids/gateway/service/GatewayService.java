@@ -285,14 +285,16 @@ public class GatewayService {
             RegistCar registCar = registCarList.get(0);
 
             if (registCar.getCarNo().equals(carNo)) { //완전 일치
+                log.info("차량번호 = {}({}) : 완전일치", carNo, digitCarNo);
                 return registCar;
             }else{ //숫자만 일치
-                // 완전 일치 강제 패턴에 등록되어 있나?
-                if (this.hasExactCarNoPattern(carNo)) {
+                // 조회된 차량이 완전 일치 강제 패턴에 등록되어 있나?
+                if (this.hasExactCarNoPattern(registCar.getCarNo())) {
                     log.info("차량번호 = {}({}) : 인식된 이 번호는 완전일치 강제로 패턴 등록 되었으나 숫자만 일치됨 ", carNo, digitCarNo);
                     return null;
                 }
             }
+            log.info("차량번호 = {}({}) : 숫자 일치. 완전일치 강제 패턴 없음. ", carNo, digitCarNo);
             return registCar;
 
         } else { // 숫자일치 결과가 2개 이상
@@ -300,12 +302,12 @@ public class GatewayService {
             Optional<RegistCar> registCarOptional = registCarList.stream().filter(registCar -> carNo.equals(registCar.getCarNo())).findFirst();
 
             if (registCarOptional.isPresent()) { // 완전히 일차하는 차량이  존재
-                log.info("차량번호 = {}({}) : 다건 조회후 완전일치 차량 있음 ", carNo, digitCarNo);
+                log.info("차량번호 = {}({}) : 숫자 일치 목록중 완전일치 차량 있음 ", carNo, digitCarNo);
                 return registCarOptional.get();
             } else { // 완전히 일차하는 차량이 없음
 
                 // 숫자일치 목록중 완전 일치 강제 패턴에 등록되지 않은 차량이 있나?
-                Optional<RegistCar> registCarAvailable = registCarList.stream().filter(registCar -> this.hasExactCarNoPattern(registCar.getCarNo())).findFirst();
+                Optional<RegistCar> registCarAvailable = registCarList.stream().filter(registCar -> !this.hasExactCarNoPattern(registCar.getCarNo())).findFirst();
 
                 if (registCarAvailable.isPresent()) {
                     log.info("차량번호 = {}({}) : 숫자일치 목록중 완전 일치 강제 패턴에 등록되지 않은 차량 있음. 첫번째 선택.", registCarAvailable.get().getCarNo(), digitCarNo);
