@@ -124,8 +124,12 @@ public class GatewayService {
             if (transitMode == 1) { // 획인후 통과
                 boolean isAllowPass = false;
                 RegistCar registCar = findRegistCar(carNo, logicType);
+                boolean isWarningCar = isWarningCar(carNo);
 
-                if (registCar == null) {
+                if (isWarningCar) { // 경고 차량
+                    requestDto.setCarSection(6L);
+
+                } else if (registCar == null) {
                     long taxiType = getTaxiType(carNo);
 
                     if (taxiType > 0) {
@@ -155,28 +159,20 @@ public class GatewayService {
                             isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                         }
                     }
-                } else {
+                } else { //registCar != null
 
-                        requestDto.setBy(registCar);
-                        isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
+                    requestDto.setBy(registCar);
+                    isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                 }
 
-
                 if (isAllowPass) {
-                    boolean isWarningCar = isWarningCar(carNo);
-
-                    if (isWarningCar) {
-                        // 출입 차단
-                        requestDto.setCarSection(6L);
-                        accessBlocked(requestDto);
-                    } else {
-                        // 출입허용
-                        accessAllowed(requestDto);
-                    }
+                    // 출입허용
+                    accessAllowed(requestDto);
                 } else {
                     // 출입 차단
                     accessBlocked(requestDto);
                 }
+            // 획인후 통과 끝
 
             } else {
                 RegistCar registCar = findRegistCar(carNo, logicType);
