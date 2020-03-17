@@ -525,6 +525,7 @@ public class GatewayService {
      * @param requestDto 연동요청 Dto
      */
     private void accessAllowed(InterlockRequestDto requestDto) {
+        log.info("차량번호 = {}, 통로 = {} 출입 허용",requestDto.getCarNo(), requestDto.getGateName());
         requestDto.setGateStatus(1);
         interlockService.sendGateServer(requestDto);
         interlockService.sendSignageServer(requestDto);
@@ -538,6 +539,7 @@ public class GatewayService {
      * @param requestDto 연동요청 Dto
      */
     private void accessBlocked(InterlockRequestDto requestDto) {
+        log.info("차량번호 = {}, 통로 = {} 출입 차단",requestDto.getCarNo(), requestDto.getGateName());
         requestDto.setGateStatus(2);
         interlockService.sendSignageServer(requestDto);
         interlockService.sendLocalServer(requestDto);
