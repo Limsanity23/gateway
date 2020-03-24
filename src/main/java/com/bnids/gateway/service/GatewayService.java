@@ -85,6 +85,7 @@ public class GatewayService {
         if (accuracy2 == null) accuracy2 = 0;
         Long gateId = lprRequestDto.getGateId();
         String carNo = lprRequestDto.getLprCarNo();
+        String carNo2 = lprRequestDto.getLprCarNo2();
         boolean bothHaveNumber = false;
 
         if (accuracy > 0 && accuracy2 > 0) { //둘다 인식
@@ -108,7 +109,7 @@ public class GatewayService {
 
         Integer transitMode = gate.getTransitMode();
 
-        log.info("차량번호 = {}, 통로 = {}({}) 출입 시작",carNo,gateName, gateId);
+        log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) 출입 시작",carNo,carNo2,gateName, gateId);
         long beforeTime = System.currentTimeMillis();
 
         InterlockRequestDto requestDto = InterlockRequestDto.builder()
@@ -137,11 +138,12 @@ public class GatewayService {
 
             RegistCar registCar = findRegistCar(carNo, logicType);
             if (bothHaveNumber) {
-                String carNo2 = lprRequestDto.getLprCarNo2();
                 RegistCar registCar2 = findRegistCar(carNo2, logicType);
                 if (registCar == null) {
+                    log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}가 검색되지 않아 {}를 선택함", carNo, carNo2, gateName, gateId, carNo, carNo2);
                     registCar = registCar2;
                     carNo = carNo2;
+                    requestDto.setCarImage(lprRequestDto.getCarImage2());
                 }
             }
             if (transitMode == 1) { // 획인후 통과
