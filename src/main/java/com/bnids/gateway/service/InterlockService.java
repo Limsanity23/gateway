@@ -153,6 +153,9 @@ public class InterlockService {
      * @param dto 연동요청 Dto
      */
     public void sendHomenetServer(InterlockRequestDto dto) {
+
+        log.info("홈넷 전송 필요 여부 체크. InstallDevice = {}, 차량번호 = {}, 통로 = {}({}), CarSection = {}, NoticeSetup = {}, ",
+                dto.getInstallDevice(), dto.getCarNo(), dto.getGateName(), dto.getGateId(), dto.getCarSection() , dto.getNoticeSetup());
         if (StringUtils.contains(dto.getInstallDevice(), "HOMENET")
                 && dto.getCarSection() == 10 && StringUtils.contains(dto.getNoticeSetup(),"HOMENET")) {
             HomenetServerRequestDto homenetServerRequestDto = HomenetServerRequestDto.builder()
