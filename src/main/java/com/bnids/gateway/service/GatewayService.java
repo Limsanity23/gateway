@@ -80,9 +80,22 @@ public class GatewayService {
 
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
-        String lprCarNo = accuracy == 0 ? "미인식" : lprRequestDto.getLprCarNo();
-        String carNo = lprCarNo;
+        if (accuracy == null) accuracy = 0;
+        Integer accuracy2 = lprRequestDto.getAccuracy2();
+        if (accuracy2 == null) accuracy2 = 0;
         Long gateId = lprRequestDto.getGateId();
+        String carNo = lprRequestDto.getLprCarNo();
+        boolean bothHaveNumber = false;
+
+        if (accuracy > 0 && accuracy2 > 0) { //둘다 인식
+            bothHaveNumber = true;
+        }else if (accuracy2 > 0) {
+            carNo = lprRequestDto.getLprCarNo2();
+        }else if (accuracy > 0) {
+            carNo = lprRequestDto.getLprCarNo();
+        }else{ //둘다 미인식
+            carNo = "미인식";
+        }
 
 
         SystemSetup systemSetup = findSystemSetup();
@@ -99,8 +112,8 @@ public class GatewayService {
         long beforeTime = System.currentTimeMillis();
 
         InterlockRequestDto requestDto = InterlockRequestDto.builder()
-                .lprCarNo(lprCarNo)
-                .carNo(lprCarNo)
+                .lprCarNo(carNo)
+                .carNo(carNo)
                 .gateId(gateId)
                 .gateName(gate.getGateName())
                 .gateType(gate.getGateType())
@@ -110,7 +123,7 @@ public class GatewayService {
                 .plateType(lprRequestDto.getPlateType())
                 .siteCode(systemSetup.getSiteCode()).build();
 
-        if (StringUtils.contains(lprCarNo, "미인식")) {
+        if (StringUtils.contains(carNo, "미인식")) {
             requestDto.setCarNo("미인식"+System.currentTimeMillis());
             requestDto.setCarSection(1L);
             if (transitMode == 3) {
@@ -121,9 +134,19 @@ public class GatewayService {
                 accessBlocked(requestDto);
             }
         } else { // 인식, 오인식
+
+            RegistCar registCar = findRegistCar(carNo, logicType);
+            if (bothHaveNumber) {
+                String carNo2 = lprRequestDto.getLprCarNo2();
+                RegistCar registCar2 = findRegistCar(carNo2, logicType);
+                if (registCar == null) {
+                    registCar = registCar2;
+                    carNo = carNo2;
+                }
+            }
             if (transitMode == 1) { // 획인후 통과
                 boolean isAllowPass = false;
-                RegistCar registCar = findRegistCar(carNo, logicType);
+                //
                 boolean isWarningCar = isWarningCar(carNo);
 
                 if (isWarningCar) { // 경고 차량
@@ -175,7 +198,6 @@ public class GatewayService {
             // 획인후 통과 끝
 
             } else {
-                RegistCar registCar = findRegistCar(carNo, logicType);
 
                 if (registCar == null) {
                     AppVisitCar appVisitCar = findAppVisitCar(carNo);

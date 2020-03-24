@@ -36,6 +36,9 @@ public class LprRequestDto {
     private String lprCarNo;
     private Integer accuracy;
     private String carImage;
+    private String lprCarNo2;
+    private Integer accuracy2;
+    private String carImage2;
     private Long gateId;
     private Integer plateType;
 }
