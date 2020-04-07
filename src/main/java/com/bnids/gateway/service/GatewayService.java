@@ -42,6 +42,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -78,6 +79,9 @@ public class GatewayService {
     @NonNull
     private final InterlockService interlockService;
 
+    @NonNull
+    private final VisitCarRepository visitCarRepository;
+
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
         if (accuracy == null) accuracy = 0;
@@ -102,7 +106,7 @@ public class GatewayService {
         SystemSetup systemSetup = findSystemSetup();
         Integer logicType = systemSetup.getLogicType();
         Integer operationLimitSetup = systemSetup.getOperationLimitSetup();
-
+        String leaveCarRestrictionUseYn = systemSetup.getLeaveCarRestrictionUseYn();
         Gate gate = findGate(gateId);
 
         String gateName = gate.getGateName();
@@ -122,6 +126,7 @@ public class GatewayService {
                 .installDevice(gate.getInstallDevice())
                 .carImage(lprRequestDto.getCarImage())
                 .plateType(lprRequestDto.getPlateType())
+                .leaveCarRestrictionUseYn(leaveCarRestrictionUseYn)
                 .siteCode(systemSetup.getSiteCode()).build();
 
         if (StringUtils.contains(carNo, "미인식")) {
@@ -223,8 +228,12 @@ public class GatewayService {
                     } else {
                         accessAllowed(requestDto);
                     }
-                } else { // 무조건 통과
-                    accessAllowed(requestDto);
+                } else {
+                    if(isUnRestrictedCar(requestDto)) {
+                        accessBlocked(requestDto);
+                    } else {
+                        accessAllowed(requestDto);
+                    }
                 }
             }
         }
@@ -400,6 +409,33 @@ public class GatewayService {
                     return false;
                 });
     }
+
+    /**
+     * 출차제한 허용 여부
+     * @param requestDto
+     * @return
+     */
+    private boolean isUnRestrictedCar(InterlockRequestDto requestDto) {
+        return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
+                .map(visitCar -> {
+                    if( requestDto.getGateType() == 3
+                            && "Y".equals(requestDto.getLeaveCarRestrictionUseYn())
+                            && StringUtils.contains(requestDto.getInstallDevice(), "RESTRICT_LEAVE_CAR")
+                            && StringUtils.contains(requestDto.getInstallDevice(), "LPR_CAMERA2")
+                            && StringUtils.contains(requestDto.getInstallDevice(), "SIGNAGE")
+                            && visitCar.getRestrictLeaveCar() == 0
+                            && visitCar.getCarSection() == 4
+                            || visitCar.getCarSection() == 5
+                    ) {
+                        log.info("차량번호 = {}, 통로 = {}({}) 출차 제한 차량, {} 출차 제한됨" ,requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), visitCar.getRestrictLeaveCar());
+                        return true;
+                    } else {
+                        log.info("차량번호 = {}, 통로 = {}({}) 출차 제한 차량, {} 출차 허용됨" ,requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), visitCar.getRestrictLeaveCar());
+                        return false;
+                    }
+                }).orElseGet(() -> false);
+    }
+
 
     /**
      * 차량 출입 제한

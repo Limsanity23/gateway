@@ -53,6 +53,9 @@ public class SystemSetup extends AuditModel<Long> {
     @Column(nullable = false)
     private Integer logicType;
 
+    @Column(nullable = false)
+    private String leaveCarRestrictionUseYn;
+
     @Column
     private String installOption;
 

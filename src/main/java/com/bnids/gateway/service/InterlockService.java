@@ -126,6 +126,7 @@ public class InterlockService {
                 .addressHo(dto.getAddressHo())
                 .siteCode(dto.getSiteCode())
                 .installOption(dto.getInstallOption())
+                .restrictLeaveCar(0)
                 .build();
 
         String localServer = appSetting.getLocalServer();

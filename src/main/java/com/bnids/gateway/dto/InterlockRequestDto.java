@@ -53,6 +53,7 @@ public class InterlockRequestDto {
     private String installDevice;
     private String siteCode;
     private String ownerName;
+    private String leaveCarRestrictionUseYn;
 
     public void setBy(RegistCar registCar) {
         this.setRegistCarId(registCar.getRegistCarId());
