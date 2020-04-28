@@ -34,16 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * @author yannishin
@@ -229,7 +225,7 @@ public class GatewayService {
                         accessAllowed(requestDto);
                     }
                 } else {
-                    if(isUnRestrictedCar(requestDto)) {
+                    if(isRestrictedCar(requestDto)) {
                         accessBlocked(requestDto);
                     } else {
                         accessAllowed(requestDto);
@@ -415,14 +411,13 @@ public class GatewayService {
      * @param requestDto
      * @return
      */
-    private boolean isUnRestrictedCar(InterlockRequestDto requestDto) {
+    private boolean isRestrictedCar(InterlockRequestDto requestDto) {
         return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
                 .map(visitCar -> {
                     if( requestDto.getGateType() == 3
                             && "Y".equals(requestDto.getLeaveCarRestrictionUseYn())
-                            && StringUtils.contains(requestDto.getInstallDevice(), "RESTRICT_LEAVE_CAR")
-                            && StringUtils.contains(requestDto.getInstallDevice(), "LPR_CAMERA2")
-                            && StringUtils.contains(requestDto.getInstallDevice(), "SIGNAGE")
+                            && StringUtils.contains(requestDto.getInstallOption(), "LPR_CAMERA2")
+                            && StringUtils.contains(requestDto.getInstallOption(), "SIGNAGE")
                             && visitCar.getRestrictLeaveCar() == 0
                             && visitCar.getCarSection() == 4
                             || visitCar.getCarSection() == 5
