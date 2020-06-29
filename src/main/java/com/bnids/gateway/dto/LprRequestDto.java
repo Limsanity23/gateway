@@ -41,4 +41,5 @@ public class LprRequestDto {
     private String carImage2;
     private Long gateId;
     private Integer plateType;
+    private boolean paymentSuccess;
 }

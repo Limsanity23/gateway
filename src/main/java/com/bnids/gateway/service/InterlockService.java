@@ -189,4 +189,29 @@ public class InterlockService {
                     });
         }
     }
+
+    /**
+     * 무인정산기 서버로 출입차 정보 전송
+     *
+     * @param dto
+     */
+    public void sendUnmannedPaymentServer(InterlockRequestDto dto) {
+        log.info(" 무인정산기 서버 호출 InstallDevice = {}, 차량번호 = {}, 통로 = {}({}), 무인정산기ID = {}, NoticeSetup = {}, ",
+                         dto.getInstallDevice(), dto.getCarNo(), dto.getGateName(), dto.getGateId(), dto.getUnmannedPaymentKioskId() , dto.getNoticeSetup());
+        String unmannedPaymentServer = appSetting.getUnmannedPaymentServer();
+
+        Mono<InterlockResponseDto> unmannedPaymentReponse = webClient.post()
+                                .uri(unmannedPaymentServer)
+                                .syncBody(dto)
+                                .retrieve()
+                                .bodyToMono(InterlockResponseDto.class);
+
+        unmannedPaymentReponse
+                .doOnError(t -> {
+                    log.error("무인버 정산기 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", unmannedPaymentServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
+                })
+                .subscribe(s -> {
+                    log.info("무인 정산기 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", unmannedPaymentServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
+                });
+    }
 }

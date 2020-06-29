@@ -54,6 +54,9 @@ public class InterlockRequestDto {
     private String siteCode;
     private String ownerName;
     private String leaveCarRestrictionUseYn;
+    private boolean paymentSuccess;
+
+    private Long unmannedPaymentKioskId;
 
     public void setBy(RegistCar registCar) {
         this.setRegistCarId(registCar.getRegistCarId());

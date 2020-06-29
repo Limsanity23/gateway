@@ -33,3 +33,4 @@ bnids-app:
     gateControlServer: 'http://172.20.0.21/gate/api/gate'
     push-server: 'http://push.happyparking.co.kr'
     homenet-interface-server: 'http://172.20.0.21/homenet/api/transit'
+    unmanned-payment-server: 'http://localhost:12000/local/api/payments'

@@ -39,4 +39,5 @@ public class AppSetting {
     private String gateControlServer;
     private String pushServer;
     private String homenetInterfaceServer;
+    private String unmannedPaymentServer;
 }

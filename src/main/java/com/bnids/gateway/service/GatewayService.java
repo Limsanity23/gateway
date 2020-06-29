@@ -78,6 +78,9 @@ public class GatewayService {
     @NonNull
     private final VisitCarRepository visitCarRepository;
 
+    @NonNull
+    private final UnmannedPaymentKioskRepository unmannedPaymentKioskRepository;
+
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
         if (accuracy == null) accuracy = 0;
@@ -98,12 +101,12 @@ public class GatewayService {
             carNo = "미인식";
         }
 
-
         SystemSetup systemSetup = findSystemSetup();
         Integer logicType = systemSetup.getLogicType();
         Integer operationLimitSetup = systemSetup.getOperationLimitSetup();
         String leaveCarRestrictionUseYn = systemSetup.getLeaveCarRestrictionUseYn();
         Gate gate = findGate(gateId);
+
 
         String gateName = gate.getGateName();
 
@@ -123,6 +126,7 @@ public class GatewayService {
                 .carImage(lprRequestDto.getCarImage())
                 .plateType(lprRequestDto.getPlateType())
                 .leaveCarRestrictionUseYn(leaveCarRestrictionUseYn)
+                .paymentSuccess(lprRequestDto.isPaymentSuccess())
                 .siteCode(systemSetup.getSiteCode()).build();
 
         if (StringUtils.contains(carNo, "미인식")) {
@@ -171,7 +175,7 @@ public class GatewayService {
                             if (logicPatterns.size() == 0) {
                                 log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음",carNo,gateName, gateId);
                                 requestDto.setCarSection(2L);
-                            }else{
+                            } else {
                                 final LogicPattern logicPattern = logicPatterns.get(0);
                                 log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}",carNo,gateName, gateId, logicPatterns.size());
                                 registCar = findRegistCar(logicPattern.getRegistCarId());
@@ -179,7 +183,6 @@ public class GatewayService {
                                 requestDto.setBy(registCar);
                                 isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                             }
-
                         } else {
                             requestDto.setBy(appVisitCar);
                             isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
@@ -197,9 +200,15 @@ public class GatewayService {
                 } else {
                     // 출입 차단
                     accessBlocked(requestDto);
+
                 }
             // 획인후 통과 끝
 
+            } else if (transitMode == 4) {       // 결제 후 통과
+                // 결제 후 통과 시작
+                UnmannedPaymentKiosk unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(gateId).orElseThrow(NotFoundException::new);
+                requestDto.setUnmannedPaymentKioskId(unmannedPaymentKiosk.getId());
+                this.processAfterPayment(requestDto);
             } else {
 
                 if (registCar == null) {
@@ -239,6 +248,14 @@ public class GatewayService {
 
         if (elapseTime > 1000) {
             log.info("Lazy Log : 차량번호 = {} {} ms", requestDto.getCarNo(), elapseTime);
+        }
+    }
+
+    public void processAfterPayment(InterlockRequestDto requestDto) {
+        if( requestDto.isPaymentSuccess() ) {
+            accessAllowed(requestDto);
+        } else {
+            interlockService.sendUnmannedPaymentServer(requestDto);
         }
     }
 
