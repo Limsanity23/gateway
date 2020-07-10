@@ -26,6 +26,8 @@ package com.bnids.gateway.service;
 import com.bnids.exception.NotFoundException;
 import com.bnids.gateway.dto.InterlockRequestDto;
 import com.bnids.gateway.dto.LprRequestDto;
+import com.bnids.gateway.dto.WarningCarAutoRegistRulesDto;
+import com.bnids.gateway.dto.WarningCarDto;
 import com.bnids.gateway.entity.*;
 import com.bnids.gateway.repository.*;
 import lombok.NonNull;
@@ -80,6 +82,13 @@ public class GatewayService {
 
     @NonNull
     private final UnmannedPaymentKioskRepository unmannedPaymentKioskRepository;
+
+    @NonNull
+    private final WarningCarAutoRegistRulesRepository warningCarAutoRegistRulesRepository;
+
+    @NonNull
+    private final VisitCarRepositorySupport visitCarRepositorySupport;
+
 
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
@@ -200,7 +209,6 @@ public class GatewayService {
                 } else {
                     // 출입 차단
                     accessBlocked(requestDto);
-
                 }
             // 획인후 통과 끝
 
@@ -246,10 +254,46 @@ public class GatewayService {
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
 
+        WarningCarAutoRegistRulesDto autoRegistWarningCarRulesDto = this.autoRegistWarningCar(requestDto);
+        if( autoRegistWarningCarRulesDto != null ) {
+            registAutoWarningCar(requestDto, autoRegistWarningCarRulesDto);
+        };
+
         if (elapseTime > 1000) {
             log.info("Lazy Log : 차량번호 = {} {} ms", requestDto.getCarNo(), elapseTime);
         }
     }
+
+    public void registAutoWarningCar(InterlockRequestDto requestDto, WarningCarAutoRegistRulesDto warningCarAutoRegistRulesDto) {
+        WarningCarDto.Create create = WarningCarDto.Create.builder()
+                .carNo(requestDto.getCarNo())
+                .carSection(requestDto.getCarSection())
+                .digitCarNo(digitCarNo(requestDto.getCarNo()))
+                .registReason(warningCarAutoRegistRulesDto.getWarinigCarRulesSection().getValue())
+                .registMethodKind("자동등록")
+                .register("시스템")
+                .build();
+        warningCarRepository.save(create.toEntity());
+    }
+
+    public WarningCarAutoRegistRulesDto autoRegistWarningCar(InterlockRequestDto requestDto) {
+        if( requestDto.getGateType() == 3) {
+            requestDto.getCarSection();
+            List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findByCarSection(requestDto.getCarSection());
+            for(WarningCarAutoRegistRules rule : rules) {
+                WarningCarAutoRegistRulesDto warningCarAutoRegistRules = WarningCarAutoRegistRulesDto
+                        .builder()
+                        .build()
+                        .of(rule);
+                warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
+                if(visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules).size() >= rule.getViolationTime()) {
+                    return warningCarAutoRegistRules;
+                }
+            }
+        }
+        return null;
+    }
+
 
     public void processAfterPayment(InterlockRequestDto requestDto) {
         if( requestDto.isPaymentSuccess() ) {

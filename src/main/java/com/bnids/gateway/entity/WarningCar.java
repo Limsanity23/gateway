@@ -27,10 +27,7 @@ import com.bnids.core.base.AuditModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 
@@ -78,4 +75,23 @@ public class WarningCar extends AuditModel<Long> {
     public Long getId() {
         return warningCarId;
     }
+
+    @Column(precision = 9, nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private WarningCarRegistEnum registKind;
+
+    @Column
+    private String registMethodKind;
+
+    @Column(length = 500)
+    private String warningCarRegistContent;
+
+    @Column(precision = 9)
+    private Long carSection;
+
+    @Column(precision = 9)
+    private Integer lastVisitCarId;
+
+    @Column
+    private String register;
 }
