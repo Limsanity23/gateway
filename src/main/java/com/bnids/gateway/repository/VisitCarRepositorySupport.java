@@ -49,7 +49,7 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
             builder.and(visitCar.entvhclDt.after(LocalDateTime.now().minusDays(dto.getRegistDay())));
         }
         if( dto.getWarinigCarRulesSection().equals(WarningCarRegistEnum.PARKING_DURATION_VIOLATION) ) {
-            builder.and(Expressions.numberTemplate(Long.class, "DATEDIFF({0}, {1})", visitCar.lvvhclDt, visitCar.entvhclDt).gt(dto.getParkingTime()));
+            builder.and(Expressions.numberTemplate(Long.class, "TIMEDIFF({0}, {1})", visitCar.lvvhclDt, visitCar.entvhclDt).gt(dto.getParkingTime()));
         }
         return builder;
     }
