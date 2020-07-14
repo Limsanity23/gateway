@@ -277,18 +277,15 @@ public class GatewayService {
     }
 
     public WarningCarAutoRegistRulesDto autoRegistWarningCar(InterlockRequestDto requestDto) {
-        if( requestDto.getGateType() == 3) {
-            requestDto.getCarSection();
-            List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findByCarSection(requestDto.getCarSection());
-            for(WarningCarAutoRegistRules rule : rules) {
-                WarningCarAutoRegistRulesDto warningCarAutoRegistRules = WarningCarAutoRegistRulesDto
-                        .builder()
-                        .build()
-                        .of(rule);
-                warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
-                if(visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules).size() >= rule.getViolationTime()) {
-                    return warningCarAutoRegistRules;
-                }
+        List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findByCarSection(requestDto.getCarSection());
+        for(WarningCarAutoRegistRules rule : rules) {
+            WarningCarAutoRegistRulesDto warningCarAutoRegistRules = WarningCarAutoRegistRulesDto
+                    .builder()
+                    .build()
+                    .of(rule);
+            warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
+            if(visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules).size() >= rule.getViolationTime()) {
+                return warningCarAutoRegistRules;
             }
         }
         return null;
