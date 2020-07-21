@@ -42,6 +42,9 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         BooleanBuilder builder = new BooleanBuilder();
 
         builder.and(visitCar.carNo.eq(dto.getCarNo()));
+        if( dto.getDeletedDt() != null ) {
+            builder.and(visitCar.entvhclDt.before(dto.getDeletedDt()));
+        }
         if( dto.getCarSection().intValue() > 0 ) {
             builder.and(visitCar.carSection.eq(dto.getCarSection().intValue()));
         }

@@ -30,12 +30,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author yannishin
  */
 public interface WarningCarRepository extends BaseJPARepository<WarningCar, Long> {
     boolean existsByCarNo(String carNo);
+
+    @Query("select w from WarningCar w where w.carNo = :carNo and w.registStatus != 1 ")
+    Optional<WarningCar> findWarningCarByCarNoAndStatus(@Param("carNo")String carNo);
+
+    @Query("select w from WarningCar w where w.carNo = :carNo order by w.warningCarId desc ")
+    List<WarningCar> findWarningCarByCarNo(@Param("carNo")String carNo);
 
     @Modifying
     @Query("delete from WarningCar w where w.warningCarId in :warningCarIds")

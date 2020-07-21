@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Builder
 @Setter
 @Getter
@@ -16,6 +18,9 @@ public class WarningCarAutoRegistRulesDto {
     private Integer violationTime;
     private WarningCarRegistEnum warinigCarRulesSection;
     private String carNo;
+    private LocalDateTime deletedDt;
+
+
     public WarningCarAutoRegistRulesDto of(WarningCarAutoRegistRules warningCarAutoRegistRules) {
         return WarningCarAutoRegistRulesDto.builder()
                     .carSection(warningCarAutoRegistRules.getCarSection())

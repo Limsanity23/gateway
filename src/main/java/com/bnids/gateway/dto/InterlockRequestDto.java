@@ -28,6 +28,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 /**
  * @author yannishin
  */
@@ -55,6 +57,7 @@ public class InterlockRequestDto {
     private String ownerName;
     private String leaveCarRestrictionUseYn;
     private boolean paymentSuccess;
+    private LocalDateTime warningCarDeleteDt;
 
     private Long unmannedPaymentKioskId;
 

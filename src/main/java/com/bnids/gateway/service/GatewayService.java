@@ -89,7 +89,6 @@ public class GatewayService {
     @NonNull
     private final VisitCarRepositorySupport visitCarRepositorySupport;
 
-
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
         if (accuracy == null) accuracy = 0;
@@ -254,6 +253,16 @@ public class GatewayService {
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
 
+        // 경고차량 삭제 차량인지 여부 확인
+
+        // 삭제된 경고차량 여부
+
+        List<WarningCar> warningCars = warningCarRepository.findWarningCarByCarNo(requestDto.getCarNo());
+        WarningCar warningCar = warningCars.size() > 0 ? warningCars.get(0) : null;
+        if(warningCar != null && warningCar.getRegistStatus() == 1) {
+            requestDto.setWarningCarDeleteDt(warningCar.getDeletedDt());
+        }
+
         WarningCarAutoRegistRulesDto autoRegistWarningCarRulesDto = this.autoRegistWarningCar(requestDto);
         if( autoRegistWarningCarRulesDto != null ) {
             registAutoWarningCar(requestDto, autoRegistWarningCarRulesDto);
@@ -284,6 +293,9 @@ public class GatewayService {
                     .build()
                     .of(rule);
             warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
+            if(requestDto.getWarningCarDeleteDt() != null) {
+                warningCarAutoRegistRules.setDeletedDt(requestDto.getWarningCarDeleteDt());
+            }
             if(visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules).size() >= rule.getViolationTime()) {
                 return warningCarAutoRegistRules;
             }
@@ -624,8 +636,8 @@ public class GatewayService {
      * @return 경고차량 여부
      */
     private boolean isWarningCar(String carNo) {
-
-        boolean warningCar = warningCarRepository.existsByCarNo(carNo);
+//        boolean warningCar = warningCarRepository.existsByCarNo(carNo);
+        boolean warningCar = warningCarRepository.findWarningCarByCarNoAndStatus(carNo).isPresent();
         if (warningCar) {
             log.info("차량번호 = {} 경고 차량차량으로 출입 차단됨",carNo);
         }
