@@ -150,13 +150,23 @@ public class GatewayService {
         } else { // 인식, 오인식
 
             RegistCar registCar = findRegistCar(carNo, logicType);
-            if (bothHaveNumber) {
-                RegistCar registCar2 = findRegistCar(carNo2, logicType);
+            if (bothHaveNumber && !carNo.equals(carNo2)) { //두개 다 번호가 있지만, 그 두 번호가 같지 않은 경우에
                 if (registCar == null) {
-                    log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}가 검색되지 않아 {}를 선택함", carNo, carNo2, gateName, gateId, carNo, carNo2);
-                    registCar = registCar2;
-                    carNo = carNo2;
-                    requestDto.setCarImage(lprRequestDto.getCarImage2());
+                    log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}가 검색되지 않음", carNo, carNo2, gateName, gateId, carNo);
+
+                    RegistCar registCar2 = findRegistCar(carNo2, logicType);
+                    // 두 번호 모두 등록되지 않은 경우 차량 번호의 길이가 지나치게 짧으면(4자리 이하) 무시
+                    if (registCar2 == null && carNo2.length() <= 4) {
+                        log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}도 검색되지 않음", carNo, carNo2, gateName, gateId, carNo2);
+                        log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}은 길이가 짧아 선택하지 않음", carNo, carNo2, gateName, gateId, carNo2);
+                    }else {
+                        log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}를 선택함", carNo, carNo2, gateName, gateId, carNo2);
+                        registCar = registCar2;
+                        carNo = carNo2;
+                        requestDto.setLprCarNo(carNo);
+                        requestDto.setCarNo(carNo);
+                        requestDto.setCarImage(lprRequestDto.getCarImage2());
+                    }
                 }
             }
             if (transitMode == 1) { // 획인후 통과
