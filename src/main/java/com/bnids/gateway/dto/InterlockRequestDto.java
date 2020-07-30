@@ -29,6 +29,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author yannishin
@@ -56,6 +57,7 @@ public class InterlockRequestDto {
     private String siteCode;
     private String ownerName;
     private String leaveCarRestrictionUseYn;
+    private Date visitAllowableTime;
     private boolean paymentSuccess;
     private LocalDateTime warningCarDeleteDt;
 

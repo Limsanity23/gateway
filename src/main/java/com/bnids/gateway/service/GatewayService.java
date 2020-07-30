@@ -40,6 +40,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,6 +114,7 @@ public class GatewayService {
         Integer logicType = systemSetup.getLogicType();
         Integer operationLimitSetup = systemSetup.getOperationLimitSetup();
         String leaveCarRestrictionUseYn = systemSetup.getLeaveCarRestrictionUseYn();
+        Date visitAllowableTime = systemSetup.getVisitAllowableTime();
         Gate gate = findGate(gateId);
 
 
@@ -134,6 +136,7 @@ public class GatewayService {
                 .carImage(lprRequestDto.getCarImage())
                 .plateType(lprRequestDto.getPlateType())
                 .leaveCarRestrictionUseYn(leaveCarRestrictionUseYn)
+                .visitAllowableTime(visitAllowableTime)
                 .paymentSuccess(lprRequestDto.isPaymentSuccess())
                 .siteCode(systemSetup.getSiteCode()).build();
 
@@ -217,7 +220,13 @@ public class GatewayService {
                     accessAllowed(requestDto);
                 } else {
                     // 출입 차단
-                    accessBlocked(requestDto);
+
+                    // 방문차량 주차시간 설정에 따른 예외 허용
+                    if (inAllowableTime(requestDto)) {
+                        accessAllowed(requestDto);
+                    }else {
+                        accessBlocked(requestDto);
+                    }
                 }
             // 획인후 통과 끝
 
@@ -509,6 +518,40 @@ public class GatewayService {
                         return false;
                     }
                 }).orElseGet(() -> false);
+    }
+
+    /**
+     * 방문차량 주차시간 제한시간 이내 여부
+     * @param requestDto
+     * @return
+     */
+    private boolean inAllowableTime(InterlockRequestDto requestDto) {
+        Date globalAllowableTime = requestDto.getVisitAllowableTime();
+        //글로벌 설정 값이 없거나 0이면 허용
+        if (globalAllowableTime == null || globalAllowableTime.getTime() == 0) {
+            return true;
+        }
+
+        return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
+                .map(visitCar -> {
+                    //개별 설정 값이 없거나 0이면 글로벌 설정값을 따름
+                    if (visitCar.getVisitAllowableTime() == null || visitCar.getVisitAllowableTime().getTime() == 0) {
+                        //입차시간 + 글로벌 허용시간이 현재 시간 이후 이면 통과
+                        if (visitCar.getEntvhclDt().plusMinutes(globalAllowableTime.getMinutes()).isAfter(LocalDateTime.now()) ) {
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }else{
+                        //입차시간 + 개별 허용시간이 현재 시간 이후 이면 통과
+                        if (visitCar.getEntvhclDt().plusMinutes(visitCar.getVisitAllowableTime().getMinutes()).isAfter(LocalDateTime.now()) ) {
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }
+
+                }).orElseGet(() -> true); //없거나 1개 이상일 경우 통과
     }
 
 

@@ -7,6 +7,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -69,6 +70,9 @@ public class VisitCar extends BaseEntity<Long> {
 
     @Column(length = 100)
     private String visitPlaceName;
+
+    @Column
+    private Date visitAllowableTime;
 
     @JsonIgnore
     @Override

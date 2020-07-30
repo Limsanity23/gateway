@@ -26,6 +26,7 @@ import com.bnids.core.base.AuditModel;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -55,6 +56,9 @@ public class SystemSetup extends AuditModel<Long> {
 
     @Column(nullable = false)
     private String leaveCarRestrictionUseYn;
+
+    @Column
+    private Date visitAllowableTime;
 
     @Column
     private String installOption;
