@@ -222,9 +222,14 @@ public class GatewayService {
                     // 출입 차단
 
                     // 방문차량 주차시간 설정에 따른 예외 허용
-                    if (inAllowableTime(requestDto)) {
-                        accessAllowed(requestDto);
-                    }else {
+                    if(this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
+                        if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
+                            accessAllowed(requestDto);
+                        } else { // 아니면 전광판에 표시
+                            requestDto.setCarSection(-1L);
+                            accessBlocked(requestDto);
+                        }
+                    }else{
                         accessBlocked(requestDto);
                     }
                 }
@@ -521,6 +526,20 @@ public class GatewayService {
     }
 
     /**
+     * 방문차량 주차시간 글로벌 설정 여부
+     * @param requestDto
+     * @return
+     */
+    private boolean hasGlobalAllowableTime(InterlockRequestDto requestDto) {
+        Date globalAllowableTime = requestDto.getVisitAllowableTime();
+        //글로벌 설정 값이 없거나 0이면 허용
+        if (globalAllowableTime == null || globalAllowableTime.getTime() == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * 방문차량 주차시간 제한시간 이내 여부
      * @param requestDto
      * @return
@@ -528,7 +547,7 @@ public class GatewayService {
     private boolean inAllowableTime(InterlockRequestDto requestDto) {
         Date globalAllowableTime = requestDto.getVisitAllowableTime();
         //글로벌 설정 값이 없거나 0이면 허용
-        if (globalAllowableTime == null || globalAllowableTime.getTime() == 0) {
+        if (!this.hasGlobalAllowableTime(requestDto)) {
             return true;
         }
 
