@@ -40,6 +40,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -223,6 +224,7 @@ public class GatewayService {
 
                     // 방문차량 주차시간 설정에 따른 예외 허용
                     if(this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
+                        log.info("차량번호 = {}, 통로 = {}({}) 방문차량 주차시간 글로벌 설정 있음",carNo,gateName, gateId);
                         if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
                             accessAllowed(requestDto);
                         } else { // 아니면 전광판에 표시
@@ -526,14 +528,41 @@ public class GatewayService {
     }
 
     /**
+     * 방문차량 주차시간 분으로 환산
+     * @param localDate
+     * @return
+     */
+    private long getAllowableTimeMinutes(Date localDate) {
+        if (localDate == null) {
+            return 0;
+        }
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(localDate);
+        calendar.add(Calendar.HOUR_OF_DAY, -9);
+        Date date = calendar.getTime();
+
+        int years = date.getYear();
+        int days =  date.getDate();
+        int hours =  date.getHours();
+        int minutes =  date.getMinutes();
+
+        if (years < 2000) {
+            days = 0;
+        }
+
+        return (days * 24 * 60) + (hours * 60) + minutes;
+    }
+
+    /**
      * 방문차량 주차시간 글로벌 설정 여부
      * @param requestDto
      * @return
      */
     private boolean hasGlobalAllowableTime(InterlockRequestDto requestDto) {
         Date globalAllowableTime = requestDto.getVisitAllowableTime();
+        long minutes = this.getAllowableTimeMinutes(globalAllowableTime);
         //글로벌 설정 값이 없거나 0이면 허용
-        if (globalAllowableTime == null || globalAllowableTime.getTime() == 0) {
+        if (minutes == 0) {
             return false;
         }
         return true;
@@ -550,20 +579,31 @@ public class GatewayService {
         if (!this.hasGlobalAllowableTime(requestDto)) {
             return true;
         }
+        long globalMinutes = this.getAllowableTimeMinutes(globalAllowableTime);
+
+        log.info("차량번호 = {}, 글로벌 설정 분:{}",requestDto.getCarNo(), globalMinutes);
+
+        if (globalMinutes == 0) {
+            return true;
+        }
 
         return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
                 .map(visitCar -> {
                     //개별 설정 값이 없거나 0이면 글로벌 설정값을 따름
                     if (visitCar.getVisitAllowableTime() == null || visitCar.getVisitAllowableTime().getTime() == 0) {
+                        log.info("차량번호 = {}, 방문차량 주차시간 개별 설정 값이 없음", requestDto.getCarNo());
                         //입차시간 + 글로벌 허용시간이 현재 시간 이후 이면 통과
-                        if (visitCar.getEntvhclDt().plusMinutes(globalAllowableTime.getMinutes()).isAfter(LocalDateTime.now()) ) {
+                        if (visitCar.getEntvhclDt().plusMinutes(globalMinutes).isAfter(LocalDateTime.now()) ) {
                             return true;
                         }else{
                             return false;
                         }
                     }else{
                         //입차시간 + 개별 허용시간이 현재 시간 이후 이면 통과
-                        if (visitCar.getEntvhclDt().plusMinutes(visitCar.getVisitAllowableTime().getMinutes()).isAfter(LocalDateTime.now()) ) {
+                        long minutes = this.getAllowableTimeMinutes(globalAllowableTime);
+                        log.info("차량번호 = {}, 개별 차량 설정 분:{}",requestDto.getCarNo(), minutes);
+
+                        if (visitCar.getEntvhclDt().plusMinutes(minutes).isAfter(LocalDateTime.now()) ) {
                             return true;
                         }else{
                             return false;
