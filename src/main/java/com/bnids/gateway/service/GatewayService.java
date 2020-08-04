@@ -228,7 +228,7 @@ public class GatewayService {
                         if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
                             accessAllowed(requestDto);
                         } else { // 아니면 전광판에 표시
-                            requestDto.setCarSection(0L);
+                            requestDto.setCarSection(100L); //주차시간초과 차량
                             accessBlocked(requestDto);
                         }
                     }else{
