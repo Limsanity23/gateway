@@ -589,8 +589,9 @@ public class GatewayService {
 
         return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
                 .map(visitCar -> {
+                    long visitCarAllowableTimeMinutes = this.getAllowableTimeMinutes(visitCar.getVisitAllowableTime());
                     //개별 설정 값이 없거나 0이면 글로벌 설정값을 따름
-                    if (visitCar.getVisitAllowableTime() == null || visitCar.getVisitAllowableTime().getTime() == 0) {
+                    if (visitCarAllowableTimeMinutes == 0) {
                         log.info("차량번호 = {}, 방문차량 주차시간 개별 설정 값이 없음", requestDto.getCarNo());
                         //입차시간 + 글로벌 허용시간이 현재 시간 이후 이면 통과
                         if (visitCar.getEntvhclDt().plusMinutes(globalMinutes).isAfter(LocalDateTime.now()) ) {
@@ -600,10 +601,9 @@ public class GatewayService {
                         }
                     }else{
                         //입차시간 + 개별 허용시간이 현재 시간 이후 이면 통과
-                        long minutes = this.getAllowableTimeMinutes(globalAllowableTime);
-                        log.info("차량번호 = {}, 개별 차량 설정 분:{}",requestDto.getCarNo(), minutes);
+                        log.info("차량번호 = {}, 개별 차량 설정 분:{}",requestDto.getCarNo(), visitCarAllowableTimeMinutes);
 
-                        if (visitCar.getEntvhclDt().plusMinutes(minutes).isAfter(LocalDateTime.now()) ) {
+                        if (visitCar.getEntvhclDt().plusMinutes(visitCarAllowableTimeMinutes).isAfter(LocalDateTime.now()) ) {
                             return true;
                         }else{
                             return false;
