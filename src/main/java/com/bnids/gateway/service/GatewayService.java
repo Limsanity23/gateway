@@ -546,7 +546,7 @@ public class GatewayService {
         int hours =  date.getHours();
         int minutes =  date.getMinutes();
 
-        if (years < 2000) {
+        if (years < 100) { // 이해는 안가지만 서기 2000년이 100임
             days = 0;
         }
 
