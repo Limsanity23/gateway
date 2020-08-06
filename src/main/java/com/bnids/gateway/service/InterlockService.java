@@ -56,9 +56,11 @@ public class InterlockService {
         if (StringUtils.contains(dto.getInstallDevice(), "BLDC_GATE")) {
             String gateServer = appSetting.getGateControlServer();
             Long gateId = dto.getGateId();
+            String carNo = dto.getCarNo();
 
             Mono<GateServerResponseDto> gateResponse = webClient.get()
-                    .uri(gateServer + "/{gateId}", gateId)
+                    //.uri(gateServer + "/{gateId}", gateId)
+                    .uri(gateServer + "/{gateId}/{carNo}", gateId, carNo)
                     .retrieve()
                     .bodyToMono(GateServerResponseDto.class);
 
