@@ -222,8 +222,8 @@ public class GatewayService {
                 } else {
                     // 출입 차단
 
-                    // 방문차량 주차시간 설정에 따른 예외 허용
-                    if(this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
+                    // 출구인 경우 방문차량 주차시간 설정에 따른 예외 허용
+                    if(gate.getGateType() == 3 && this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
                         log.info("차량번호 = {}, 통로 = {}({}) 방문차량 주차시간 글로벌 설정 있음",carNo,gateName, gateId);
                         if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
                             accessAllowed(requestDto);
