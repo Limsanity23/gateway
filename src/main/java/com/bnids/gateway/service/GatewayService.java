@@ -173,14 +173,13 @@ public class GatewayService {
                     }
                 }
             }
+
+            boolean isWarningCar = isWarningCar(carNo);
             if (transitMode == 1) { // 획인후 통과
                 boolean isAllowPass = false;
                 //
-                boolean isWarningCar = isWarningCar(carNo);
-
                 if (isWarningCar) { // 경고 차량
                     requestDto.setCarSection(6L);
-
                 } else if (registCar == null) {
                     long taxiType = getTaxiType(carNo);
 
@@ -258,8 +257,6 @@ public class GatewayService {
 
                 if (transitMode == 2) { // 인식후 통과
                     boolean isOperationLimit = isCarAccessLimit(requestDto, transitMode, operationLimitSetup);
-                    boolean isWarningCar = isWarningCar(carNo);
-
                     if (!isOperationLimit && isWarningCar) {
                         requestDto.setCarSection(6L);
                         accessBlocked(requestDto);
@@ -267,7 +264,7 @@ public class GatewayService {
                         accessAllowed(requestDto);
                     }
                 } else {
-                    if(isRestrictedCar(requestDto)) {
+                    if(isWarningCar || isRestrictedCar(requestDto)) {
                         accessBlocked(requestDto);
                     } else {
                         accessAllowed(requestDto);
