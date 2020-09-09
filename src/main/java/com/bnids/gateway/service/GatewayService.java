@@ -512,8 +512,8 @@ public class GatewayService {
                             && StringUtils.contains(requestDto.getInstallOption(), "LPR_CAMERA2")
                             && StringUtils.contains(requestDto.getInstallOption(), "SIGNAGE")
                             && visitCar.getRestrictLeaveCar() == 0
-                            && visitCar.getCarSection() == 4
-                            || visitCar.getCarSection() == 5
+                            && (visitCar.getCarSection() == 4
+                            || visitCar.getCarSection() == 5)
                     ) {
                         log.info("차량번호 = {}, 통로 = {}({}) 출차 제한 차량, {} 출차 제한됨" ,requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), visitCar.getRestrictLeaveCar());
                         return true;
