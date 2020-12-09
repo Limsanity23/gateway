@@ -264,7 +264,7 @@ public class GatewayService {
                         accessAllowed(requestDto);
                     }
                 } else {
-                    if(isWarningCar || isRestrictedCar(requestDto)) {
+                    if(isWarningCar) {
                         accessBlocked(requestDto);
                     } else {
                         accessAllowed(requestDto);
