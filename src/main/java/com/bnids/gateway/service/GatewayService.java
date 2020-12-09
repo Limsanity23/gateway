@@ -215,7 +215,7 @@ public class GatewayService {
                     isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                 }
 
-                if (isAllowPass) {
+                if (isAllowPass) { 
                     // 출입허용
                     accessAllowed(requestDto);
                 } else {
