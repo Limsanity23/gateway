@@ -263,6 +263,8 @@ public class GatewayService {
                     } else {
                         accessAllowed(requestDto);
                     }
+                } else if (transitMode == 3) { // 무조건 통과
+                    accessAllowed(requestDto);
                 } else {
                     if(isWarningCar || isRestrictedCar(requestDto)) {
                         accessBlocked(requestDto);
