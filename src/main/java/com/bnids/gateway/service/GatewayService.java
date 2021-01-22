@@ -215,7 +215,7 @@ public class GatewayService {
                     isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                 }
 
-                if (isAllowPass) {
+                if (isAllowPass) { 
                     // 출입허용
                     accessAllowed(requestDto);
                 } else {
@@ -266,7 +266,7 @@ public class GatewayService {
                 } else if (transitMode == 3) { // 무조건 통과
                     accessAllowed(requestDto);
                 } else {
-                    if(isWarningCar || isRestrictedCar(requestDto)) {
+                    if(isWarningCar) {
                         accessBlocked(requestDto);
                     } else {
                         accessAllowed(requestDto);
