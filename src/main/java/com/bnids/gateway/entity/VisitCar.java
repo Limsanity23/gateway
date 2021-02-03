@@ -83,4 +83,10 @@ public class VisitCar extends BaseEntity<Long> {
     @Column(precision = 9, nullable = false)
     private Integer restrictLeaveCar;
 
+    @Column
+    private Integer entranceGateTransitMode;
+
+    @Column
+    private Integer exitGateTransitMode;
+
 }

@@ -60,8 +60,11 @@ public class InterlockRequestDto {
     private Date visitAllowableTime;
     private boolean paymentSuccess;
     private LocalDateTime warningCarDeleteDt;
-
+    private Integer gatePaymentType;
+    private Integer transitMode;
     private Long unmannedPaymentKioskId;
+
+
 
     public void setBy(RegistCar registCar) {
         this.setRegistCarId(registCar.getRegistCarId());

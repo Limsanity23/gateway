@@ -129,6 +129,7 @@ public class InterlockService {
                 .siteCode(dto.getSiteCode())
                 .installOption(dto.getInstallOption())
                 .restrictLeaveCar(0)
+                .transitMode(dto.getTransitMode())
                 .build();
 
         String localServer = appSetting.getLocalServer();
@@ -200,7 +201,7 @@ public class InterlockService {
     public void sendUnmannedPaymentServer(InterlockRequestDto dto) {
         log.info(" 무인정산기 서버 호출 InstallDevice = {}, 차량번호 = {}, 통로 = {}({}), 무인정산기ID = {}, NoticeSetup = {}, ",
                          dto.getInstallDevice(), dto.getCarNo(), dto.getGateName(), dto.getGateId(), dto.getUnmannedPaymentKioskId() , dto.getNoticeSetup());
-        String unmannedPaymentServer = appSetting.getUnmannedPaymentServer();
+        String unmannedPaymentServer = appSetting.getUnmannedPaymentServer() + "/unmanned";
 
         Mono<InterlockResponseDto> unmannedPaymentReponse = webClient.post()
                                 .uri(unmannedPaymentServer)
@@ -216,4 +217,28 @@ public class InterlockService {
                     log.info("무인 정산기 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", unmannedPaymentServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
                 });
     }
+
+    /***
+     * 유인정산기 서버로 출입차 정보 전송
+     */
+    public void sendMannedPaymentServer(InterlockRequestDto dto) {
+        log.info(" 유인정산기 서버 호출 InstallDevice = {}, 차량번호 = {}, 통로 = {}({}), 무인정산기ID = {}, NoticeSetup = {}, ",
+                dto.getInstallDevice(), dto.getCarNo(), dto.getGateName(), dto.getGateId(), dto.getUnmannedPaymentKioskId() , dto.getNoticeSetup());
+        String mannedPaymentServer = appSetting.getUnmannedPaymentServer() + "/manned";
+
+        Mono<InterlockResponseDto> mannedPaymentReponse = webClient.post()
+                .uri(mannedPaymentServer)
+                .syncBody(dto)
+                .retrieve()
+                .bodyToMono(InterlockResponseDto.class);
+
+        mannedPaymentReponse
+                .doOnError(t -> {
+                    log.error("유인 정산기 서버 = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", mannedPaymentServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
+                })
+                .subscribe(s -> {
+                    log.info("유인 정산기 서버 = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", mannedPaymentServer, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
+                });
+    }
+
 }

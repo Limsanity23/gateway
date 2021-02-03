@@ -63,8 +63,12 @@ public class SystemSetup extends AuditModel<Long> {
     @Column
     private String installOption;
 
+    @Column
+    private String paymentEnabledYn;
+
     @Override
     public Long getId() {
         return systemSetupId;
     }
+
 }

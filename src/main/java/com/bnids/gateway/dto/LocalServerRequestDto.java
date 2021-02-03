@@ -47,4 +47,5 @@ public class LocalServerRequestDto {
     private String siteCode;
     private String installOption;
     private Integer restrictLeaveCar;
+    private Integer transitMode;
 }

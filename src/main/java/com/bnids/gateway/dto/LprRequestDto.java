@@ -42,4 +42,17 @@ public class LprRequestDto {
     private Long gateId;
     private Integer plateType;
     private boolean paymentSuccess;
+
+    @Override
+    public String toString() {
+        return "LprRequestDto{" +
+                "lprCarNo='" + lprCarNo + '\'' +
+                ", accuracy=" + accuracy +
+                ", lprCarNo2='" + lprCarNo2 + '\'' +
+                ", accuracy2=" + accuracy2 +
+                ", gateId=" + gateId +
+                ", plateType=" + plateType +
+                ", paymentSuccess=" + paymentSuccess +
+                '}';
+    }
 }

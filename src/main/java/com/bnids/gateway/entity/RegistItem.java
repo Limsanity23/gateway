@@ -60,6 +60,8 @@ public class RegistItem  extends AuditModel<Long> {
     @Column
     private Integer sortOrder;
 
+    @Column(length = 1, nullable = false)
+    private String payYn;
 
     @JsonIgnore
     @Override

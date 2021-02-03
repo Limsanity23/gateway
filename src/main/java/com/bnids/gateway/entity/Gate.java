@@ -64,7 +64,10 @@ public class Gate extends AuditModel<Long> {
 
     @Column(length = 1000)
     private String installDevice;
-    
+
+    @Column
+    private Integer gatePaymentType;                // 유,무인 결제 여부
+
     @JsonIgnore
     @Override
     public Long getId() {

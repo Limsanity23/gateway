@@ -101,13 +101,15 @@ public class GatewayService {
         String carNo2 = lprRequestDto.getLprCarNo2();
         boolean bothHaveNumber = false;
 
+        log.info("@@ 인식엔진에서 넘어온 데이터 조회 {} ", lprRequestDto.toString());
+
         if (accuracy > 0 && accuracy2 > 0) { //둘다 인식
             bothHaveNumber = true;
-        }else if (accuracy2 > 0) {
+        } else if (accuracy2 > 0) {
             carNo = lprRequestDto.getLprCarNo2();
-        }else if (accuracy > 0) {
+        } else if (accuracy > 0) {
             carNo = lprRequestDto.getLprCarNo();
-        }else{ //둘다 미인식
+        } else { //둘다 미인식
             carNo = "미인식";
         }
 
@@ -117,7 +119,6 @@ public class GatewayService {
         String leaveCarRestrictionUseYn = systemSetup.getLeaveCarRestrictionUseYn();
         Date visitAllowableTime = systemSetup.getVisitAllowableTime();
         Gate gate = findGate(gateId);
-
 
         String gateName = gate.getGateName();
 
@@ -139,21 +140,45 @@ public class GatewayService {
                 .leaveCarRestrictionUseYn(leaveCarRestrictionUseYn)
                 .visitAllowableTime(visitAllowableTime)
                 .paymentSuccess(lprRequestDto.isPaymentSuccess())
+                .gatePaymentType(gate.getGatePaymentType())
+                .transitMode(transitMode)
                 .siteCode(systemSetup.getSiteCode()).build();
 
-        if (StringUtils.contains(carNo, "미인식")) {
+        RegistCar registCar = findRegistCar(carNo, logicType);
+
+        // 결제 미인식이어도 보내야 한다. 결제의 경우 미인식 ---- 미인식
+
+        // 결제를 사용중이고 출구인 경우
+        // 결제를 보낸다.
+        if ("Y".equals(systemSetup.getPaymentEnabledYn()) && gate.getGateType() > 2) {
+            if(registCar == null) {
+                // 결제 후 통과 시작
+                // 출입 차단
+
+                if (StringUtils.contains(carNo, "미인식")) {
+                    requestDto.setCarSection(1L);
+                }
+
+                Optional<UnmannedPaymentKiosk> unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(requestDto.getGateId());
+                unmannedPaymentKiosk.ifPresent(
+                        paymentKiosk -> {
+                            requestDto.setUnmannedPaymentKioskId(paymentKiosk.getId());
+                        }
+                );
+                this.processAfterPayment(requestDto);
+            } else {
+                requestDto.setBy(registCar);
+                accessAllowed(requestDto);
+            }
+        } else if (StringUtils.contains(carNo, "미인식")) {
             requestDto.setCarNo("미인식"+System.currentTimeMillis());
             requestDto.setCarSection(1L);
             if (transitMode == 3) {
                 // 무조건 통과인 경우만 출입 허용
                 accessAllowed(requestDto);
-            } else {
-                // 이외 출입 차단
-                accessBlocked(requestDto);
             }
         } else { // 인식, 오인식
 
-            RegistCar registCar = findRegistCar(carNo, logicType);
             if (bothHaveNumber && !carNo.equals(carNo2)) { //두개 다 번호가 있지만, 그 두 번호가 같지 않은 경우에
                 if (registCar == null) {
                     log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}가 검색되지 않음", carNo, carNo2, gateName, gateId, carNo);
@@ -210,9 +235,11 @@ public class GatewayService {
                         }
                     }
                 } else { //registCar != null
-
                     requestDto.setBy(registCar);
-                    isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
+                    if(isWarningCar || isRestrictedCar(requestDto)) {
+                    } else {
+                        isAllowPass = true;
+                    }
                 }
 
                 if (isAllowPass) {
@@ -234,13 +261,7 @@ public class GatewayService {
                         accessBlocked(requestDto);
                     }
                 }
-            // 획인후 통과 끝
 
-            } else if (transitMode == 4) {       // 결제 후 통과
-                // 결제 후 통과 시작
-                UnmannedPaymentKiosk unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(gateId).orElseThrow(NotFoundException::new);
-                requestDto.setUnmannedPaymentKioskId(unmannedPaymentKiosk.getId());
-                this.processAfterPayment(requestDto);
             } else {
 
                 if (registCar == null) {
@@ -264,7 +285,7 @@ public class GatewayService {
                         accessAllowed(requestDto);
                     }
                 } else {
-                    if(isWarningCar || isRestrictedCar(requestDto)) {
+                    if(isWarningCar) {
                         accessBlocked(requestDto);
                     } else {
                         accessAllowed(requestDto);
@@ -273,13 +294,17 @@ public class GatewayService {
             }
         }
 
+
+
+        // 다른 모드인 경우를 구별해서 담아줄 필요가 있다.
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
 
         // 경고차량 삭제 차량인지 여부 확인
+        // 결제 후 통과와 결제 후 통과가 아닌 경우를 생각해 보면
+        // 단순하게 여기서 생각할건 넘겨야할
 
         // 삭제된 경고차량 여부
-
         List<WarningCar> warningCars = warningCarRepository.findWarningCarByCarNo(requestDto.getCarNo());
         WarningCar warningCar = warningCars.size() > 0 ? warningCars.get(0) : null;
         if(warningCar != null && warningCar.getRegistStatus() == 1) {
@@ -287,10 +312,11 @@ public class GatewayService {
         }
 
         WarningCarAutoRegistRulesDto autoRegistWarningCarRulesDto = this.autoRegistWarningCar(requestDto);
-        if( autoRegistWarningCarRulesDto != null ) {
+        if(autoRegistWarningCarRulesDto != null) {
             registAutoWarningCar(requestDto, autoRegistWarningCarRulesDto);
-        };
+        }
 
+        // 결제 후 통과가 아니여도 정산을 사용하면 요금계산은 되어야 한다.
         if (elapseTime > 1000) {
             log.info("Lazy Log : 차량번호 = {} {} ms", requestDto.getCarNo(), elapseTime);
         }
@@ -326,12 +352,15 @@ public class GatewayService {
         return null;
     }
 
-
     public void processAfterPayment(InterlockRequestDto requestDto) {
-        if( requestDto.isPaymentSuccess() ) {
+        if(requestDto.isPaymentSuccess()) {
             accessAllowed(requestDto);
         } else {
-            interlockService.sendUnmannedPaymentServer(requestDto);
+            if(requestDto.getGatePaymentType() == 1) {
+                interlockService.sendUnmannedPaymentServer(requestDto);
+            } else {
+                interlockService.sendMannedPaymentServer(requestDto);
+            }
         }
     }
 
@@ -391,6 +420,10 @@ public class GatewayService {
     private RegistCar findRegistCarByDigitCarNo(String carNo, LocalDateTime now) {
         String digitCarNo = digitCarNo(carNo);
         log.info("등록 차량 조회(숫자일치로직) 차량번호 = {}({})", carNo, digitCarNo);
+        if ("".equals(digitCarNo)) {
+           return null;
+        }
+
         List<RegistCar> registCarList = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
         //Stream<RegistCar> registCarStream = registCarList.stream();
 
