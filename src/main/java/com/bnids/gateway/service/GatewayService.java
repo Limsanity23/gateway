@@ -176,6 +176,8 @@ public class GatewayService {
             if (transitMode == 3) {
                 // 무조건 통과인 경우만 출입 허용
                 accessAllowed(requestDto);
+            } else {
+                accessBlocked(requestDto);
             }
         } else { // 인식, 오인식
 
