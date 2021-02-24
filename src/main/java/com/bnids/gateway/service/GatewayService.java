@@ -186,8 +186,8 @@ public class GatewayService {
                     log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}가 검색되지 않음", carNo, carNo2, gateName, gateId, carNo);
 
                     RegistCar registCar2 = findRegistCar(carNo2, logicType);
-                    // 두 번호 모두 등록되지 않은 경우 차량 번호의 길이가 지나치게 짧거나(4자리 이하) 숫자로 시작하지 않으면 무시
-                    if (registCar2 == null && (carNo2.length() <= 4 || !Character.isDigit(carNo2.charAt(0)))) { //1110 or 울산53사1110
+                    // 두 번호 모두 등록되지 않은 경우 차량 번호의 길이가 지나치게 짧거나(5자리 이하) 숫자로 시작하지 않으면 무시
+                    if (registCar2 == null && (carNo2.length() <= 5 || !Character.isDigit(carNo2.charAt(0)))) { //1110 or 울산53사1110
                         log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}도 검색되지 않음", carNo, carNo2, gateName, gateId, carNo2);
                         log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) {}은 패턴이 보편적이지 않아 선택하지 않음", carNo, carNo2, gateName, gateId, carNo2);
                     }else {
