@@ -203,8 +203,8 @@ public class GatewayService {
 
             boolean isWarningCar = isWarningCar(carNo);
             if (transitMode == 1) { // 획인후 통과
-                boolean isAllowPass = false;
-                //
+                boolean isAllowPass = true;
+
                 if (isWarningCar) { // 경고 차량
                     requestDto.setCarSection(6L);
                 } else if (registCar == null) {
@@ -212,7 +212,6 @@ public class GatewayService {
 
                     if (taxiType > 0) {
                         requestDto.setCarSection(taxiType);
-                        isAllowPass = isAllowPass(requestDto, logicType, operationLimitSetup);
                     } else {
                         // 에약 방문 차량 조회
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
@@ -229,20 +228,21 @@ public class GatewayService {
                                 registCar = findRegistCar(logicPattern.getRegistCarId());
                                 log.info("차량번호 = {}, 통로 = {}({}) LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", carNo,gateName, gateId, logicPattern.getLogicPattern(), registCar.getCarNo());
                                 requestDto.setBy(registCar);
-                                isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                             }
                         } else {
                             requestDto.setBy(appVisitCar);
-                            isAllowPass = isAllowPass(requestDto, transitMode, operationLimitSetup);
                         }
                     }
                 } else { //registCar != null
                     requestDto.setBy(registCar);
-                    if(isWarningCar || isRestrictedCar(requestDto)) {
-                    } else {
-                        isAllowPass = true;
+
+                    if(isRestrictedCar(requestDto)) {
+                        isAllowPass = false;
                     }
                 }
+
+                isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
+
 
                 if (isAllowPass) {
                     // 출입허용
