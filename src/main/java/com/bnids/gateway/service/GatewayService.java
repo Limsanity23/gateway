@@ -824,7 +824,7 @@ public class GatewayService {
     private long getTaxiType(String carNo) {
         long taxiType = 0L;
 
-        String[] symbols = {"바", "사", "아", "자", "배", "우"};
+        String[] symbols = {"바", "사", "아", "자", "배"};
         boolean findSymbol = false;
 
         for (String symbol : symbols) {
