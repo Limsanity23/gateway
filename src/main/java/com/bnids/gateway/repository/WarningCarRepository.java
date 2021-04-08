@@ -39,7 +39,7 @@ public interface WarningCarRepository extends BaseJPARepository<WarningCar, Long
     boolean existsByCarNo(String carNo);
 
     @Query("select w from WarningCar w where w.carNo = :carNo and w.registStatus != 1 ")
-    Optional<WarningCar> findWarningCarByCarNoAndStatus(@Param("carNo")String carNo);
+    List<WarningCar> findWarningCarByCarNoAndStatus(@Param("carNo")String carNo);
 
     @Query("select w from WarningCar w where w.carNo = :carNo order by w.warningCarId desc ")
     List<WarningCar> findWarningCarByCarNo(@Param("carNo")String carNo);

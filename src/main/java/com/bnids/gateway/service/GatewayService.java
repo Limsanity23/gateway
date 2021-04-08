@@ -783,7 +783,7 @@ public class GatewayService {
      */
     private boolean isWarningCar(String carNo) {
 //        boolean warningCar = warningCarRepository.existsByCarNo(carNo);
-        boolean warningCar = warningCarRepository.findWarningCarByCarNoAndStatus(carNo).isPresent();
+        boolean warningCar = warningCarRepository.findWarningCarByCarNoAndStatus(carNo).size() > 0;
         if (warningCar) {
             log.info("차량번호 = {} 경고 차량차량으로 출입 차단됨",carNo);
         }
