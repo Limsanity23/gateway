@@ -208,16 +208,14 @@ public class GatewayService {
                 if (isWarningCar) { // 경고 차량
                     requestDto.setCarSection(6L);
                 } else if (registCar == null) {
-                    long taxiType = getTaxiType(carNo);
-
-                    if (taxiType > 0) {
-                        requestDto.setCarSection(taxiType);
-                    } else {
-                        // 에약 방문 차량 조회
-                        AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
-
-                        if (appVisitCar == null) {
-                            // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
+                    // 에약 방문 차량 조회
+                    AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
+                    if (appVisitCar == null) {
+                        // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
+                        long taxiType = getTaxiType(carNo);
+                        if (taxiType > 0) {
+                            requestDto.setCarSection(taxiType);
+                        } else {
                             List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
                             if (logicPatterns.size() == 0) {
                                 log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음",carNo,gateName, gateId);
@@ -229,9 +227,9 @@ public class GatewayService {
                                 log.info("차량번호 = {}, 통로 = {}({}) LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", carNo,gateName, gateId, logicPattern.getLogicPattern(), registCar.getCarNo());
                                 requestDto.setBy(registCar);
                             }
-                        } else {
-                            requestDto.setBy(appVisitCar);
                         }
+                    } else {
+                        requestDto.setBy(appVisitCar);
                     }
                 } else { //registCar != null
                     requestDto.setBy(registCar);
@@ -242,7 +240,6 @@ public class GatewayService {
                 }
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
-
 
                 if (isAllowPass) {
                     // 출입허용
@@ -797,11 +794,11 @@ public class GatewayService {
      */
     private void accessAllowed(InterlockRequestDto requestDto) {
         log.info("차량번호 = {}, 통로 = {} 출입 허용",requestDto.getCarNo(), requestDto.getGateName());
-        requestDto.setGateStatus(1);
-        interlockService.sendGateServer(requestDto);
-        interlockService.sendSignageServer(requestDto);
-        interlockService.sendLocalServer(requestDto);
-        interlockService.sendHomenetServer(requestDto);
+//        requestDto.setGateStatus(1);
+//        interlockService.sendGateServer(requestDto);
+//        interlockService.sendSignageServer(requestDto);
+//        interlockService.sendLocalServer(requestDto);
+//        interlockService.sendHomenetServer(requestDto);
     }
 
     /**
@@ -812,8 +809,8 @@ public class GatewayService {
     private void accessBlocked(InterlockRequestDto requestDto) {
         log.info("차량번호 = {}, 통로 = {} 출입 차단",requestDto.getCarNo(), requestDto.getGateName());
         requestDto.setGateStatus(2);
-        interlockService.sendSignageServer(requestDto);
-        interlockService.sendLocalServer(requestDto);
+//        interlockService.sendSignageServer(requestDto);
+//        interlockService.sendLocalServer(requestDto);
     }
 
     /**
