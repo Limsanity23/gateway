@@ -295,8 +295,6 @@ public class GatewayService {
             }
         }
 
-
-
         // 다른 모드인 경우를 구별해서 담아줄 필요가 있다.
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
@@ -794,11 +792,11 @@ public class GatewayService {
      */
     private void accessAllowed(InterlockRequestDto requestDto) {
         log.info("차량번호 = {}, 통로 = {} 출입 허용",requestDto.getCarNo(), requestDto.getGateName());
-//        requestDto.setGateStatus(1);
-//        interlockService.sendGateServer(requestDto);
-//        interlockService.sendSignageServer(requestDto);
-//        interlockService.sendLocalServer(requestDto);
-//        interlockService.sendHomenetServer(requestDto);
+        requestDto.setGateStatus(1);
+        interlockService.sendGateServer(requestDto);
+        interlockService.sendSignageServer(requestDto);
+        interlockService.sendLocalServer(requestDto);
+        interlockService.sendHomenetServer(requestDto);
     }
 
     /**
@@ -809,8 +807,8 @@ public class GatewayService {
     private void accessBlocked(InterlockRequestDto requestDto) {
         log.info("차량번호 = {}, 통로 = {} 출입 차단",requestDto.getCarNo(), requestDto.getGateName());
         requestDto.setGateStatus(2);
-//        interlockService.sendSignageServer(requestDto);
-//        interlockService.sendLocalServer(requestDto);
+        interlockService.sendSignageServer(requestDto);
+        interlockService.sendLocalServer(requestDto);
     }
 
     /**
