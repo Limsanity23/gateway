@@ -281,6 +281,10 @@ public class GatewayService {
                         requestDto.setCarSection(6L);
                         accessBlocked(requestDto);
                     } else {
+                        long taxiType = getTaxiType(carNo);
+                        if (taxiType > 0) {
+                            requestDto.setCarSection(taxiType);
+                        }
                         accessAllowed(requestDto);
                     }
                 } else if (transitMode == 3) { // 무조건 통과
