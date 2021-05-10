@@ -13,7 +13,7 @@ public interface VisitCarRepository extends BaseJPARepository<VisitCar, Long> {
     Optional<VisitCar> findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(String carNo);
 
     @Query(value = 
-    "SELECT sum(TIMESTAMPDIFF(MINUTE, entvhcl_dt, lvvhcl_dt)) / 60 AS MINUTE " +
+    "SELECT ifnull(sum(TIMESTAMPDIFF(MINUTE, entvhcl_dt, lvvhcl_dt)),0) / 60 AS MINUTE " +
     "FROM ( " +
     "SELECT IF(entvhcl_dt < DATE_FORMAT(NOW() ,'%Y-%m-01'), DATE_FORMAT(NOW() ,'%Y-%m-01'), entvhcl_dt) as entvhcl_dt, ifnull(lvvhcl_dt, NOW()) as lvvhcl_dt FROM local_db.visit_car " +
     "where car_section in (4, 5) " +

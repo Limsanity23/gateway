@@ -798,8 +798,9 @@ public class GatewayService {
     public String isCustomRestricted(InterlockRequestDto requestDto) {
         log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 로직 적용 시작",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
 
+        String restrictedMessage = "";
         List<Settings> settings = settingsRepository.findCustomRestrictLogicList();
-        if (settings == null || settings.size() == 0) return "";
+        if (settings == null || settings.size() == 0) return restrictedMessage;
 
         for (Settings setting : settings) {
             log.info("차량번호 = {}, 통로 = {}({}) {}:{}",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), setting.getName(), setting.getValue());
@@ -807,12 +808,14 @@ public class GatewayService {
                 double parkingHours = visitCarRepository.getSumVisitCar45ParkingHours(requestDto.getAddressDong(), requestDto.getAddressHo());
                 if (parkingHours > Double.parseDouble(setting.getValue())) {
                     requestDto.setCarSection(100L); //주차시간초과 차량
-                    return "세대방문 차량 월허용 주차시간 제한 초과입니다";
+                    restrictedMessage = "세대방문 차량 월허용 주차시간 제한 초과입니다";
                 }
 
             }
         }
-        return "";
+        log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 로직 제한 메세지: ",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), restrictedMessage);
+
+        return restrictedMessage;
 
     }
 
