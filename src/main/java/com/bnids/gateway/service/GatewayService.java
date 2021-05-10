@@ -91,6 +91,9 @@ public class GatewayService {
     @NonNull
     private final VisitCarRepositorySupport visitCarRepositorySupport;
 
+    @NonNull
+    private final SettingsRepository settingsRepository;
+
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
         if (accuracy == null) accuracy = 0;
@@ -238,8 +241,19 @@ public class GatewayService {
                         isAllowPass = false;
                     }
                 }
+                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
+                
+                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, isAllowPass);
+                if (isAllowPass) {
+
+                    String restrictedMessage = isCustomRestricted(requestDto);
+                    if (!"".equals(restrictedMessage)) {
+                        isAllowPass = false;
+                    }
+
+                }
 
                 if (isAllowPass) {
                     // 출입허용
@@ -772,6 +786,34 @@ public class GatewayService {
                     log.info("차량번호 = {}, 통로 = {}({}) , 출입제한, 미적용으로 통과됨 ",requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId());
                     return false;
                 });
+    }
+
+
+    /**
+     * 현장별 입차제한 로직 적용
+     *
+     * @param requestDto 연동요청 Dto
+     * @return 차량 출입 제한 여부
+     */
+    public String isCustomRestricted(InterlockRequestDto requestDto) {
+        log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 로직 적용 시작",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+
+        List<Settings> settings = settingsRepository.findCustomRestrictLogicList();
+        if (settings == null || settings.size() == 0) return "";
+
+        for (Settings setting : settings) {
+            log.info("차량번호 = {}, 통로 = {}({}) {}:{}",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), setting.getName(), setting.getValue());
+            if(setting.getId() == 1001L) { //세대방문 차량 월(1일~말일) 허용 주차시간 제한
+                double parkingHours = visitCarRepository.getSumVisitCar45ParkingHours(requestDto.getAddressDong(), requestDto.getAddressHo());
+                if (parkingHours > Double.parseDouble(setting.getValue())) {
+                    requestDto.setCarSection(100L); //주차시간초과 차량
+                    return "세대방문 차량 월허용 주차시간 제한 초과입니다";
+                }
+
+            }
+        }
+        return "";
+
     }
 
     /**
