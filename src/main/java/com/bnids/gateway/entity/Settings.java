@@ -22,7 +22,7 @@
  */
 package com.bnids.gateway.entity;
 
-import com.bnids.core.base.AuditModel;
+import com.bnids.core.base.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -35,7 +35,7 @@ import javax.persistence.*;
 @Builder(toBuilder = true)
 @Entity
 @Table(name = "gate_item_transit_car")
-public class Settings extends AuditModel<Long> {
+public class Settings extends BaseEntity<Long> {
 
   @Id
   @Column(name = "setting_id", nullable = false)
