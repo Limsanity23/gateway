@@ -809,7 +809,7 @@ public class GatewayService {
                 log.info("차량번호 = {}, 통로 = {}({}), {}동 {}호 주차시간 합계: {}",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), requestDto.getAddressDong(), requestDto.getAddressHo(), parkingHours);
                 if (parkingHours > Double.parseDouble(setting.getValue())) {
                     requestDto.setCarSection(100L); //주차시간초과 차량
-                    restrictedMessage = "세대방문 차량 월허용 주차시간 제한 초과입니다";
+                    restrictedMessage = "세대방문 차량 월허용 주차시간 제한 초과입니다. 관리실에 문의하세요.";
                 }
 
             }
