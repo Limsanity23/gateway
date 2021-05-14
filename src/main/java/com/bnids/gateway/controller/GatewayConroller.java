@@ -23,6 +23,8 @@
 package com.bnids.gateway.controller;
 
 import com.bnids.core.api.response.ApiResponse;
+import com.bnids.gateway.dto.CustomRestrictRequest;
+import com.bnids.gateway.dto.InterlockRequestDto;
 import com.bnids.gateway.dto.LprRequestDto;
 import com.bnids.gateway.service.GatewayService;
 import lombok.NonNull;
@@ -46,5 +48,18 @@ public class GatewayConroller {
     public ApiResponse<String> interlock(@RequestBody LprRequestDto dto) {
         gatewayService.interlock(dto);
         return ApiResponse.createOK("처리완료");
+    }
+
+    @PostMapping("/customrestrict")
+    public ApiResponse<String> customRestrict(@RequestBody CustomRestrictRequest dto) {
+        InterlockRequestDto requestDto = InterlockRequestDto.builder()
+        .carNo(dto.getCarNo())
+        .gateId(dto.getGateId())
+        .gateName(dto.getGateName())
+        .addressDong(dto.getAddressDong())
+        .addressHo(dto.getAddressHo())
+        .siteCode(dto.getSiteCode()).build();
+        String restrictedMessage = gatewayService.isCustomRestricted(requestDto);
+        return ApiResponse.createOK(restrictedMessage);
     }
 }
