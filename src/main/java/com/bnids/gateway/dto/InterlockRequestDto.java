@@ -85,5 +85,36 @@ public class InterlockRequestDto {
         this.setAddressDong(appVisitCar.getAddressDong());
         this.setAddressHo(appVisitCar.getAddressHo());
     }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "carNo='" + carNo + '\'' +
+                ", lprCarNo='" + lprCarNo + '\'' +
+                ", registCarId=" + registCarId +
+                ", carSection='" + carSection + '\'' +
+                ", gateId=" + gateId +
+                ", gateName=" + gateName +
+                ", gateType=" + gateType +
+                ", gateStatus='" + gateStatus + '\'' +
+                ", plateType='" + plateType + '\'' +
+                ", telNo='" + telNo + '\'' +
+                ", visitName='" + visitName + '\'' +
+                ", addressDong='" + addressDong + '\'' +
+                ", addressHo='" + addressHo + '\'' +
+                ", noticeSetup='" + noticeSetup + '\'' +
+                ", installOption=" + installOption +
+                ", installDevice=" + installDevice +
+                ", siteCode=" + siteCode +
+                ", ownerName=" + ownerName +
+                ", leaveCarRestrictionUseYn=" + leaveCarRestrictionUseYn +
+                ", visitAllowableTime=" + visitAllowableTime +
+                ", paymentSuccess=" + paymentSuccess +
+                ", warningCarDeleteDt=" + warningCarDeleteDt +
+                ", gatePaymentType=" + gatePaymentType +
+                ", transitMode=" + transitMode +
+                ", unmannedPaymentKioskId=" + unmannedPaymentKioskId +
+                '}';
+    }
 }
 
