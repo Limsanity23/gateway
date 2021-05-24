@@ -222,7 +222,9 @@ public class GatewayService {
                             List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
                             if (logicPatterns.size() == 0) {
                                 log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음",carNo,gateName, gateId);
-                                requestDto.setCarSection(2L);
+                                // 출차인 경우 입차 기록을 찾아서 carsection을 기록함
+                                // 없으면 일반방문차량
+                                requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
                             } else {
                                 final LogicPattern logicPattern = logicPatterns.get(0);
                                 log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}",carNo,gateName, gateId, logicPatterns.size());
@@ -241,11 +243,11 @@ public class GatewayService {
                         isAllowPass = false;
                     }
                 }
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, isAllowPass);
+                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
                 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, isAllowPass);
+                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
                 if (isAllowPass) {
 
                     String restrictedMessage = isCustomRestricted(requestDto);
@@ -658,6 +660,20 @@ public class GatewayService {
                     }
 
                 }).orElseGet(() -> true); //없거나 1개 이상일 경우 통과
+    }
+
+    /**
+     * 입차시 등록항목 가져오기
+     * @param requestDto
+     * @param defValue
+     * @return 
+     */
+    private Integer getLastCarSection(InterlockRequestDto requestDto, Integer defValue) {
+
+        return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
+                .map(visitCar -> {
+                    return visitCar.getCarSection();
+                }).orElseGet(() -> defValue); //없거나 1개 이상일 경우
     }
 
 
