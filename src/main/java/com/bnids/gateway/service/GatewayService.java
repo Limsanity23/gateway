@@ -224,7 +224,12 @@ public class GatewayService {
                                 log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음",carNo,gateName, gateId);
                                 // 출차인 경우 입차 기록을 찾아서 carsection을 기록함
                                 // 없으면 일반방문차량
-                                requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
+                                // 입출차 기록이 안맞는 데이터의 차량이 입차시 기존의 carsection을 가지고 오는 오류 수정
+                                if (gate.getGateType() == 3 || gate.getGateType() == 4) {
+                                    requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
+                                } else {
+                                    requestDto.setCarSection(2L);
+                                }
                             } else {
                                 final LogicPattern logicPattern = logicPatterns.get(0);
                                 log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}",carNo,gateName, gateId, logicPatterns.size());
@@ -899,7 +904,7 @@ public class GatewayService {
         }
 
         if (findSymbol) {
-            int region = NumberUtils.toInt( StringUtils.left(StringUtils.right(carNo,7),2), 0);
+            int region = NumberUtils.toInt(StringUtils.left(StringUtils.right(carNo,7),2), 0);
 
             if (region > 0 && region < 70) {
                 taxiType = 7L;
