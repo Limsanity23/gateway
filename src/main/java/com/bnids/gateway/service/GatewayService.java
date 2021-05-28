@@ -225,11 +225,7 @@ public class GatewayService {
                                 // 출차인 경우 입차 기록을 찾아서 carsection을 기록함
                                 // 없으면 일반방문차량
                                 // 입출차 기록이 안맞는 데이터의 차량이 입차시 기존의 carsection을 가지고 오는 오류 수정
-                                if (gate.getGateType() == 3 || gate.getGateType() == 4) {
-                                    requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
-                                } else {
-                                    requestDto.setCarSection(2L);
-                                }
+                                requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
                             } else {
                                 final LogicPattern logicPattern = logicPatterns.get(0);
                                 log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}",carNo,gateName, gateId, logicPatterns.size());
@@ -429,7 +425,7 @@ public class GatewayService {
      * 등록 차량 정보
      *
      * @param registCarId id값
-     * @return 등록차량
+     * @return 등록차량ExpoPushService.java
      */
     private RegistCar findRegistCar(Long registCarId) {
         return registCarRepository.getOne(registCarId);
@@ -674,11 +670,11 @@ public class GatewayService {
      * @return 
      */
     private Integer getLastCarSection(InterlockRequestDto requestDto, Integer defValue) {
-
-        return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
-                .map(visitCar -> {
-                    return visitCar.getCarSection();
-                }).orElseGet(() -> defValue); //없거나 1개 이상일 경우
+        if (requestDto.getGateType() == 3 || requestDto.getGateType() == 4) {
+            return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
+                    .map(VisitCar::getCarSection).orElseGet(() -> defValue); //없거나 1개 이상일 경우
+        }
+        return defValue;
     }
 
 
