@@ -824,7 +824,9 @@ public class GatewayService {
             if(setting.getId() == 1001L) { //세대방문 차량 월(1일~말일) 허용 주차시간 제한
                 double parkingHours = visitCarRepository.getSumVisitCar45ParkingHours(requestDto.getAddressDong(), requestDto.getAddressHo());
                 log.info("차량번호 = {}, 통로 = {}({}), {}동 {}호 주차시간 합계: {}",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), requestDto.getAddressDong(), requestDto.getAddressHo(), parkingHours);
-                if (parkingHours > Double.parseDouble(setting.getValue())) {
+                if (requestDto.getCarSection() == 3L || requestDto.getCarSection() >= 10L) { // 예약방문 차량 혹은 입주자차량 이후 (직원차량...) 면 제한 예외.
+                    log.info("차량번호 = {}, 통로 = {}({}) 제한 예외 - carSection: {}",requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId(), requestDto.getCarSection());
+                }else if (parkingHours > Double.parseDouble(setting.getValue())) {
                     requestDto.setCarSection(100L); //주차시간초과 차량
                     restrictedMessage = "세대방문 차량의\n 월허용 주차시간 제한 초과입니다.\n 관리실에 문의하세요.";
                 }
@@ -832,9 +834,9 @@ public class GatewayService {
             }
         }
         if ("".equals(restrictedMessage)) 
-            log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 없음",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
+            log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 없음",requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId());
         else
-            log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 : {}",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId(), restrictedMessage);
+            log.info("차량번호 = {}, 통로 = {}({}) 현장별 입차제한 : {}",requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId(), restrictedMessage);
 
         return restrictedMessage;
 
