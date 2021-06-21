@@ -154,25 +154,27 @@ public class GatewayService {
         // 결제를 사용중이고 출구인 경우
         // 결제를 보낸다.
         if ("Y".equals(systemSetup.getPaymentEnabledYn()) && gate.getGateType() > 2) {
+
             if(registCar == null) {
                 // 결제 후 통과 시작
                 // 출입 차단
-
                 if (StringUtils.contains(carNo, "미인식")) {
                     requestDto.setCarSection(1L);
+                } else {
+                    Optional<UnmannedPaymentKiosk> unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(requestDto.getGateId());
+                    unmannedPaymentKiosk.ifPresent(
+                            paymentKiosk -> {
+                                requestDto.setUnmannedPaymentKioskId(paymentKiosk.getId());
+                            }
+                    );
+                    this.processAfterPayment(requestDto);
                 }
 
-                Optional<UnmannedPaymentKiosk> unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(requestDto.getGateId());
-                unmannedPaymentKiosk.ifPresent(
-                        paymentKiosk -> {
-                            requestDto.setUnmannedPaymentKioskId(paymentKiosk.getId());
-                        }
-                );
-                this.processAfterPayment(requestDto);
             } else {
                 requestDto.setBy(registCar);
                 accessAllowed(requestDto);
             }
+
         } else if (StringUtils.contains(carNo, "미인식")) {
             requestDto.setCarNo("미인식"+System.currentTimeMillis());
             requestDto.setCarSection(1L);
