@@ -167,12 +167,12 @@ public class GatewayService {
                 if (StringUtils.contains(carNo, "미인식")) {
                     requestDto.setCarSection(1L);
                 } else {
+                    requestDto.setCarSection(2L);
                     this.processAfterPayment(requestDto);
                 }
 
             } else {
                 requestDto.setBy(registCar);
-                requestDto.setCarSection(2L);
                 this.processAfterPayment(requestDto);
 //                accessAllowed(requestDto);
             }
