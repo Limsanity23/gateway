@@ -153,7 +153,7 @@ public class GatewayService {
 
         // 결제를 사용중이고 출구인 경우
         // 결제를 보낸다.
-        if ("Y".equals(systemSetup.getPaymentEnabledYn()) && gate.getGateType() > 2) {
+        if ("Y".equals(systemSetup.getPaymentEnabledYn()) && gate.getGateType() > 2 && transitMode == 4) {
             // 결제 후 통과 시작
             Optional<UnmannedPaymentKiosk> unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(requestDto.getGateId());
             unmannedPaymentKiosk.ifPresent(
@@ -162,7 +162,7 @@ public class GatewayService {
                     }
             );
 
-            if(registCar == null) {
+            if (registCar == null) {
                 // 출입 차단
                 if (StringUtils.contains(carNo, "미인식")) {
                     requestDto.setCarSection(1L);
@@ -172,6 +172,7 @@ public class GatewayService {
 
             } else {
                 requestDto.setBy(registCar);
+                requestDto.setCarSection(2L);
                 this.processAfterPayment(requestDto);
 //                accessAllowed(requestDto);
             }
@@ -376,7 +377,7 @@ public class GatewayService {
     }
 
     public void processAfterPayment(InterlockRequestDto requestDto) {
-        if(requestDto.isPaymentSuccess()) {
+        if (requestDto.isPaymentSuccess()) {
             accessAllowed(requestDto);
         } else {
             if(requestDto.getGatePaymentType() == 1) {
