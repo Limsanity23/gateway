@@ -253,7 +253,7 @@ public class GatewayService {
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
                 
                 log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
-                if (isAllowPass) {
+                if (isAllowPass && requestDto.getCarSection() != null) {
 
                     String restrictedMessage = isCustomRestricted(requestDto);
                     if (!"".equals(restrictedMessage)) {
