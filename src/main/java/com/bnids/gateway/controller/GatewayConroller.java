@@ -58,6 +58,7 @@ public class GatewayConroller {
         .gateName(dto.getGateName())
         .addressDong(dto.getAddressDong())
         .addressHo(dto.getAddressHo())
+        .carSection(4L)
         .siteCode(dto.getSiteCode()).build();
         String restrictedMessage = gatewayService.isCustomRestricted(requestDto);
         return ApiResponse.createOK(restrictedMessage);
