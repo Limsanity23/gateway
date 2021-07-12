@@ -253,7 +253,7 @@ public class GatewayService {
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
                 
                 log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
-                if (isAllowPass && requestDto.getCarSection() != null) {
+                if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
                     String restrictedMessage = isCustomRestricted(requestDto);
                     if (!"".equals(restrictedMessage)) {
@@ -295,6 +295,8 @@ public class GatewayService {
                 } else {
                     requestDto.setBy(registCar);
                 }
+
+                requestDto.setCarSection(getLastCarSection(requestDto, requestDto.getCarSection().intValue()).longValue());
 
                 if (transitMode == 2) { // 인식후 통과
                     boolean isOperationLimit = isCarAccessLimit(requestDto, transitMode, operationLimitSetup);
@@ -676,7 +678,7 @@ public class GatewayService {
     private Integer getLastCarSection(InterlockRequestDto requestDto, Integer defValue) {
         if (requestDto.getGateType() == 3 || requestDto.getGateType() == 4) {
             return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
-                    .map(VisitCar::getCarSection).orElseGet(() -> defValue); //없거나 1개 이상일 경우
+                    .map(VisitCar::getCarSection).orElse(defValue); //없거나 1개 이상일 경우
         }
         return defValue;
     }
