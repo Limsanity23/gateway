@@ -127,7 +127,7 @@ public class GatewayService {
 
         Integer transitMode = gate.getTransitMode();
 
-        log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) 출입 시작",carNo,carNo2,gateName, gateId);
+        log.info("차량번호1 = {}, 차량번호2 = {}, 통로 = {}({}) 출입 시작", carNo, carNo2, gateName, gateId);
         long beforeTime = System.currentTimeMillis();
 
         InterlockRequestDto requestDto = InterlockRequestDto.builder()
@@ -221,7 +221,7 @@ public class GatewayService {
                         // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                         long taxiType = getTaxiType(carNo);
                         if (taxiType > 0) {
-                            requestDto.setCarSection(taxiType);
+                            requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
                         } else {
                             List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
                             if (logicPatterns.size() == 0) {
@@ -248,6 +248,8 @@ public class GatewayService {
                         isAllowPass = false;
                     }
                 }
+
+                //
                 log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
@@ -306,7 +308,7 @@ public class GatewayService {
                     } else {
                         long taxiType = getTaxiType(carNo);
                         if (taxiType > 0) {
-                            requestDto.setCarSection(taxiType);
+                            requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
                         }
                         accessAllowed(requestDto);
                     }
