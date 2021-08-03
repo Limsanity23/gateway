@@ -24,10 +24,7 @@
 package com.bnids.gateway.service;
 
 import com.bnids.exception.NotFoundException;
-import com.bnids.gateway.dto.InterlockRequestDto;
-import com.bnids.gateway.dto.LprRequestDto;
-import com.bnids.gateway.dto.WarningCarAutoRegistRulesDto;
-import com.bnids.gateway.dto.WarningCarDto;
+import com.bnids.gateway.dto.*;
 import com.bnids.gateway.entity.*;
 import com.bnids.gateway.repository.*;
 import lombok.NonNull;
@@ -35,15 +32,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author yannishin
@@ -93,6 +89,73 @@ public class GatewayService {
 
     @NonNull
     private final SettingsRepository settingsRepository;
+
+    @NonNull
+    private final AptnerService aptnerService;
+
+    private final List<String> reserveCarList = new ArrayList<>();
+
+    private long reserveCarListLoadTime;
+
+    private final long reserveCarListCacheDuration = 600 * 1000L; //10분마다 목록 갱신
+
+    @PostConstruct
+    public void init(){
+        log.info("* GatewayService init *");
+        SystemSetup system = findSystemSetup();
+        try {
+            if (isAptner(system.getSiteCode())) {
+                List<AptnerResult> list = aptnerService.getAptnerVisitAll();
+                log.info("* 아파트너 방문예약 건수 : {}",list.size());
+
+                if ( list != null) {
+                    for (int i=0; i < list.size(); i++) {
+                        reserveCarList.add(list.get(i).getCarNo());
+                    }
+                    reserveCarListLoadTime = System.currentTimeMillis();
+                }
+            }
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean checkApatnerReserve(String carNo){
+        log.info("** 아파트너 방문예약 등록여부 확인 시작 : {} *", carNo);
+        long now = System.currentTimeMillis();
+        log.info("** now - reserveCarListLoadTime: {}, 목록유효시간: {}", now - reserveCarListLoadTime, reserveCarListCacheDuration);
+        boolean isReserve = false;
+        try {
+            if (reserveCarList.isEmpty() || now - reserveCarListLoadTime > reserveCarListCacheDuration) {
+                log.info("* reserveCarList 비어 있거나 유효시간이 지남 *");
+                synchronized (reserveCarList) {
+                    if (reserveCarList.isEmpty()  || now - reserveCarListLoadTime > reserveCarListCacheDuration) {
+                        List<AptnerResult> result = aptnerService.getAptnerVisitAll();
+                        log.info("# 아파트너 방문예약 result size: {}", result.size());
+                        reserveCarList.clear();
+                        if (result != null) {
+                            for (int i=0; i < result.size(); i++) {
+//                                log.info("# result car_no: {}",result.get(i).getCarNo());
+                                reserveCarList.add(result.get(i).getCarNo());
+                            }
+                        }
+                        reserveCarListLoadTime = now;
+                    }
+                }
+            }
+
+            if (reserveCarList.contains(carNo)) {
+                log.info("* {} 는 아파트너 방문예약 차량 *", carNo);
+                isReserve = true;
+            }
+            else log.info("* {} 는 아파트너 방문예약 차량이 아님 *", carNo);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return isReserve;
+    }
 
     public void interlock(LprRequestDto lprRequestDto) {
         Integer accuracy = lprRequestDto.getAccuracy();
@@ -216,30 +279,35 @@ public class GatewayService {
                     requestDto.setCarSection(6L);
                 } else if (registCar == null) {
                     // 에약 방문 차량 조회
-                    AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
-                    if (appVisitCar == null) {
-                        // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
-                        long taxiType = getTaxiType(carNo);
-                        if (taxiType > 0) {
-                            requestDto.setCarSection(taxiType);
-                        } else {
-                            List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
-                            if (logicPatterns.size() == 0) {
-                                log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음",carNo,gateName, gateId);
-                                // 출차인 경우 입차 기록을 찾아서 carsection을 기록함
-                                // 없으면 일반방문차량
-                                // 입출차 기록이 안맞는 데이터의 차량이 입차시 기존의 carsection을 가지고 오는 오류 수정
-                                requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
-                            } else {
-                                final LogicPattern logicPattern = logicPatterns.get(0);
-                                log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}",carNo,gateName, gateId, logicPatterns.size());
-                                registCar = findRegistCar(logicPattern.getRegistCarId());
-                                log.info("차량번호 = {}, 통로 = {}({}) LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", carNo,gateName, gateId, logicPattern.getLogicPattern(), registCar.getCarNo());
-                                requestDto.setBy(registCar);
-                            }
-                        }
+                    if (isAptner(systemSetup.getSiteCode()) && checkApatnerReserve(carNo)) { //아파트너 연동 현장이면
+                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량 -> 통과 %");
+                        accessAllowed(requestDto);
                     } else {
-                        requestDto.setBy(appVisitCar);
+                        AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
+                        if (appVisitCar == null) {
+                            // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
+                            long taxiType = getTaxiType(carNo);
+                            if (taxiType > 0) {
+                                requestDto.setCarSection(taxiType);
+                            } else {
+                                List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
+                                if (logicPatterns.size() == 0) {
+                                    log.info("차량번호 = {}, 통로 = {}({}) 모든 개별로직에 부합하지 않음", carNo, gateName, gateId);
+                                    // 출차인 경우 입차 기록을 찾아서 carsection을 기록함
+                                    // 없으면 일반방문차량
+                                    // 입출차 기록이 안맞는 데이터의 차량이 입차시 기존의 carsection을 가지고 오는 오류 수정
+                                    requestDto.setCarSection(getLastCarSection(requestDto, 2).longValue());
+                                } else {
+                                    final LogicPattern logicPattern = logicPatterns.get(0);
+                                    log.info("차량번호 = {}, 통로 = {}({}) 이 번호와 관련된 개별로직 갯수 {}", carNo, gateName, gateId, logicPatterns.size());
+                                    registCar = findRegistCar(logicPattern.getRegistCarId());
+                                    log.info("차량번호 = {}, 통로 = {}({}) LogicPattern: {}, 이 패턴으로 찾은 첫번째 차량번호: {}", carNo, gateName, gateId, logicPattern.getLogicPattern(), registCar.getCarNo());
+                                    requestDto.setBy(registCar);
+                                }
+                            }
+                        } else {
+                            requestDto.setBy(appVisitCar);
+                        }
                     }
                 } else { //registCar != null
                     requestDto.setBy(registCar);
@@ -269,15 +337,15 @@ public class GatewayService {
                     // 출입 차단
 
                     // 출구인 경우 방문차량 주차시간 설정에 따른 예외 허용
-                    if(gate.getGateType() == 3 && this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
-                        log.info("차량번호 = {}, 통로 = {}({}) 방문차량 주차시간 글로벌 설정 있음",carNo,gateName, gateId);
+                    if (gate.getGateType() == 3 && this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
+                        log.info("차량번호 = {}, 통로 = {}({}) 방문차량 주차시간 글로벌 설정 있음", carNo, gateName, gateId);
                         if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
                             accessAllowed(requestDto);
                         } else { // 아니면 전광판에 표시
                             requestDto.setCarSection(100L); //주차시간초과 차량
                             accessBlocked(requestDto);
                         }
-                    }else{
+                    } else {
                         accessBlocked(requestDto);
                     }
                 }
@@ -922,5 +990,10 @@ public class GatewayService {
 
     private String digitCarNo(String carNo) {
         return carNo.replaceAll("[^0-9]", "");
+    }
+
+    private boolean isAptner(String siteCode) {
+        //10068-201207 - 김포 은여울 경남 아너스빌
+        return "10068-201207".equals(siteCode);
     }
 }
