@@ -621,8 +621,7 @@ public class GatewayService {
         long minutes = this.getAllowableTimeMinutes(globalAllowableTime);
         //글로벌 설정 값이 없거나 0이면 허용 -> 아래 주석의 내용으로 정책변경
         if (minutes == 0) {
-//            return false;
-            return true; //cks 20210802 설정시간이 0분인 경우 허용에서 비허용으로 변경
+            return false;
         }
         return true;
     }
@@ -643,8 +642,7 @@ public class GatewayService {
         log.info("차량번호 = {}, 글로벌 설정 분:{}",requestDto.getCarNo(), globalMinutes);
 
         if (globalMinutes == 0) {
-//            return true;
-            return false; //cks 20210802 설정시간이 0분인 경우 허용에서 비허용으로 변경
+            return true;
         }
 
         return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
