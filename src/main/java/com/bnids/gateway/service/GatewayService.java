@@ -136,7 +136,7 @@ public class GatewayService {
                         reserveCarList.clear();
                         if (result != null) {
                             for (int i=0; i < result.size(); i++) {
-//                                log.info("# result car_no: {}",result.get(i).getCarNo());
+                                log.info("# result car_no: {}",result.get(i).getCarNo());
                                 reserveCarList.add(result.get(i).getCarNo());
                             }
                         }

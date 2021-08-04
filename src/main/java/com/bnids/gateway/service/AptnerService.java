@@ -26,14 +26,14 @@ public class AptnerService {
     public List<AptnerResult> getAptnerVisitAll() throws ParseException {
         log.info("* getAptnerVisitAll *");
         //test
-        String aptnerServer = "https://devgtw.aptner.com/pc";
+        /*String aptnerServer = "https://devgtw.aptner.com/pc";
         String kaptCode = "T77777777";
-        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUFRORVIiLCJhdWQiOiJCTiIsImV4cCI6MzE4MDc0NTEyNiwiaWF0IjoxNjI1NTQ1MTI2LCJyb2xlcyI6IlBDIn0.804VuU5GEw86QEdf23sTaKIYF0vm8s1-SrcGuD931Pc";
+        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUFRORVIiLCJhdWQiOiJCTiIsImV4cCI6MzE4MDc0NTEyNiwiaWF0IjoxNjI1NTQ1MTI2LCJyb2xlcyI6IlBDIn0.804VuU5GEw86QEdf23sTaKIYF0vm8s1-SrcGuD931Pc";*/
 
         //real
-        /*String aptnerServer = "https://gtw.aptner.com/pc"; //real
+        String aptnerServer = "https://gtw.aptner.com/pc"; //real
         String kaptCode = "A41576914"; //real
-        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUFRORVIiLCJhdWQiOiJCTiIsImV4cCI6MzE4MDc0NTEyNywiaWF0IjoxNjI1NTQ1MTI3LCJyb2xlcyI6IlBDIn0.3dJk09kDC_6Vc-yRBJ6kJobplwVCqnFk8a9sfGzewdA";*/
+        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUFRORVIiLCJhdWQiOiJCTiIsImV4cCI6MzE4MDc0NTEyNywiaWF0IjoxNjI1NTQ1MTI3LCJyb2xlcyI6IlBDIn0.3dJk09kDC_6Vc-yRBJ6kJobplwVCqnFk8a9sfGzewdA";
 
         SimpleDateFormat format1 = new SimpleDateFormat ( "yyyy-MM-dd");
         Date time = new Date();
