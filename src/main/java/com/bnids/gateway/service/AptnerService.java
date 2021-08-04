@@ -29,7 +29,7 @@ public class AptnerService {
 
     private  String APTNER_SERVER = "https://gtw.aptner.com/pc";
     private  String KAPT_CODE = "A41576914";
-    private  String TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUFRORVIiLCJhdWQiOiJCTiIsImV4cCI6MzE4MDc0NTEyNiwiaWF0IjoxNjI1NTQ1MTI2LCJyb2xlcyI6IlBDIn0.804VuU5GEw86QEdf23sTaKIYF0vm8s1-SrcGuD931Pc";
+    private  String TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUFRORVIiLCJhdWQiOiJCTiIsImV4cCI6MzE4MDc0NTEyNywiaWF0IjoxNjI1NTQ1MTI3LCJyb2xlcyI6IlBDIn0.3dJk09kDC_6Vc-yRBJ6kJobplwVCqnFk8a9sfGzewdA";
 
 
     /**
