@@ -93,7 +93,7 @@ public class GatewayService {
     @NonNull
     private final AptnerService aptnerService;
 
-    private final List<String> reserveCarList = new ArrayList<>();
+    private final List<AptnerReserve> reserveCarList = new ArrayList<>();
 
     private long reserveCarListLoadTime;
 
@@ -105,12 +105,15 @@ public class GatewayService {
         SystemSetup system = findSystemSetup();
         try {
             if (isAptner(system.getSiteCode())) {
-                List<AptnerResult> list = aptnerService.getAptnerVisitAll();
+                List<AptnerReserve> list = aptnerService.getAptnerVisitAll();
                 log.info("* 아파트너 방문예약 건수 : {}",list.size());
+                reserveCarList.addAll(list);
 
-                if ( list != null) {
-                    for (int i=0; i < list.size(); i++) {
-                        reserveCarList.add(list.get(i).getCarNo());
+                if ( reserveCarList != null) {
+                    for (int i=0; i < reserveCarList.size(); i++) {
+                        log.info("* carNo: {}", reserveCarList.get(i).getCarNo());
+                        log.info("* dong: {}", reserveCarList.get(i).getDong());
+                        log.info("* ho: {}", reserveCarList.get(i).getHo());
                     }
                     reserveCarListLoadTime = System.currentTimeMillis();
                 }
@@ -121,7 +124,7 @@ public class GatewayService {
         }
     }
 
-    public boolean checkApatnerReserve(String carNo){
+    public boolean checkAptnerReserve(String carNo){
         log.info("** 아파트너 방문예약 등록여부 확인 시작 : {} *", carNo);
         long now = System.currentTimeMillis();
         log.info("** now - reserveCarListLoadTime: {}, 목록유효시간: {}", now - reserveCarListLoadTime, reserveCarListCacheDuration);
@@ -131,13 +134,15 @@ public class GatewayService {
                 log.info("* reserveCarList 비어 있거나 유효시간이 지남 *");
                 synchronized (reserveCarList) {
                     if (reserveCarList.isEmpty()  || now - reserveCarListLoadTime > reserveCarListCacheDuration) {
-                        List<AptnerResult> result = aptnerService.getAptnerVisitAll();
+                        List<AptnerReserve> result = aptnerService.getAptnerVisitAll();
                         log.info("# 아파트너 방문예약 result size: {}", result.size());
                         reserveCarList.clear();
-                        if (result != null) {
-                            for (int i=0; i < result.size(); i++) {
-                                log.info("# result car_no: {}",result.get(i).getCarNo());
-                                reserveCarList.add(result.get(i).getCarNo());
+                        reserveCarList.addAll(result);
+                        if (reserveCarList != null) {
+                            for (int i=0; i < reserveCarList.size(); i++) {
+                                log.info("* carNo: {}", reserveCarList.get(i).getCarNo());
+                                log.info("* dong: {}", reserveCarList.get(i).getDong());
+                                log.info("* ho: {}", reserveCarList.get(i).getHo());
                             }
                         }
                         reserveCarListLoadTime = now;
@@ -145,11 +150,17 @@ public class GatewayService {
                 }
             }
 
-            if (reserveCarList.contains(carNo)) {
-                log.info("* {} 는 아파트너 방문예약 차량 *", carNo);
-                isReserve = true;
+            for (AptnerReserve item : reserveCarList) {
+                if (item.getCarNo().equals(carNo)) {
+                    log.info("* {} 는 아파트너 방문예약 차량 *", carNo);
+                    isReserve = true;
+                    //입차통보 api 호출
+                    aptnerService.sendAccessIn(item.getCarNo(), item.getDong(), item.getHo());
+                    break;
+                }
             }
-            else log.info("* {} 는 아파트너 방문예약 차량이 아님 *", carNo);
+
+            if (!isReserve) log.info("* {} 는 아파트너 방문예약 차량이 아님 *", carNo);
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -279,7 +290,7 @@ public class GatewayService {
                     requestDto.setCarSection(6L);
                 } else if (registCar == null) {
                     // 에약 방문 차량 조회
-                    if (isAptner(systemSetup.getSiteCode()) && checkApatnerReserve(carNo)) { //아파트너 연동 현장이면
+                    if (isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(carNo)) { //아파트너 연동 현장이면
                         log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량 -> 통과 %");
                         accessAllowed(requestDto);
                     } else {

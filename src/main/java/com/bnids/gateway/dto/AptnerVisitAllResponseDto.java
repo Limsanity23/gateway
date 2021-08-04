@@ -14,11 +14,11 @@ import java.util.List;
 public class AptnerVisitAllResponseDto implements Serializable {
     private static final long serialVersionUID = 8171333549019161663L;
     @JsonProperty("result")
-    private List<AptnerResult> result;
+    private List<AptnerReserve> result;
 
 
     @JsonProperty("result")
-    public List<AptnerResult> getResult() {
+    public List<AptnerReserve> getResult() {
         return result;
     }
 

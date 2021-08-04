@@ -19,7 +19,7 @@ import java.io.Serializable;
 })
 
 @Getter @Setter
-public class AptnerResult implements Serializable {
+public class AptnerReserve implements Serializable {
 
     private static final long serialVersionUID = -7625790714189456386L;
 
