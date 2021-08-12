@@ -240,6 +240,7 @@ public class GatewayService {
                 // 출입 차단
                 if (StringUtils.contains(carNo, "미인식")) {
                     requestDto.setCarSection(1L);
+                    interlockService.sendSignageServer(requestDto);
                 } else {
                     requestDto.setCarSection(2L);
                     this.processAfterPayment(requestDto);
@@ -468,6 +469,7 @@ public class GatewayService {
             } else {
                 interlockService.sendMannedPaymentServer(requestDto);
             }
+            interlockService.sendSignageServer(requestDto);
         }
     }
 
