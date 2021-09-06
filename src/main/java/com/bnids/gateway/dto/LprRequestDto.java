@@ -42,6 +42,7 @@ public class LprRequestDto {
     private Long gateId;
     private Integer plateType;
     private boolean paymentSuccess;
+    private String note;
 
     @Override
     public String toString() {
@@ -53,6 +54,7 @@ public class LprRequestDto {
                 ", gateId=" + gateId +
                 ", plateType=" + plateType +
                 ", paymentSuccess=" + paymentSuccess +
+                ", note=" + note +
                 '}';
     }
 }
