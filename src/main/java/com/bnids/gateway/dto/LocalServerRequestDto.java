@@ -48,4 +48,5 @@ public class LocalServerRequestDto {
     private String installOption;
     private Integer restrictLeaveCar;
     private Integer transitMode;
+    private String note;
 }
