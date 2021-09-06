@@ -219,7 +219,9 @@ public class GatewayService {
             .paymentSuccess(lprRequestDto.isPaymentSuccess())
             .gatePaymentType(gate.getGatePaymentType())
             .transitMode(transitMode)
-            .siteCode(systemSetup.getSiteCode()).build();
+            .siteCode(systemSetup.getSiteCode())
+            .note(lprRequestDto.getNote())
+            .build();
 
         RegistCar registCar = findRegistCar(carNo, logicType);
 
@@ -953,6 +955,7 @@ public class GatewayService {
      * @param requestDto 연동요청 Dto
      */
     private void accessAllowed(InterlockRequestDto requestDto) {
+        log.info("NOTE : {}", requestDto.getNote());
         log.info("차량번호 = {}, 통로 = {} 출입 허용",requestDto.getCarNo(), requestDto.getGateName());
         requestDto.setGateStatus(1);
         interlockService.sendGateServer(requestDto);

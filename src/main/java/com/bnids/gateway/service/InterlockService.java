@@ -130,6 +130,7 @@ public class InterlockService {
                 .installOption(dto.getInstallOption())
                 .restrictLeaveCar(0)
                 .transitMode(dto.getTransitMode())
+                .note(dto.getNote())
                 .build();
 
         String localServer = appSetting.getLocalServer();
@@ -151,7 +152,7 @@ public class InterlockService {
     }
 
     /**
-     *  로컬 서버에 차량정보 전송
+     *  홈넷 서버에 차량정보 전송
      *  인터페이스 ID PCLPR0003
      *
      * @param dto 연동요청 Dto

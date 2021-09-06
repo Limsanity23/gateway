@@ -63,6 +63,7 @@ public class InterlockRequestDto {
     private Integer gatePaymentType;
     private Integer transitMode;
     private Long unmannedPaymentKioskId;
+    private String note;
 
 
 
@@ -114,6 +115,7 @@ public class InterlockRequestDto {
                 ", gatePaymentType=" + gatePaymentType +
                 ", transitMode=" + transitMode +
                 ", unmannedPaymentKioskId=" + unmannedPaymentKioskId +
+                ", note=" + note +
                 '}';
     }
 }
