@@ -178,6 +178,9 @@ public class GatewayService {
         String carNo2 = lprRequestDto.getLprCarNo2();
         boolean bothHaveNumber = false;
 
+        // If the gate is already opened by LPR, return true otherwise false
+        boolean isGateAlreadyUp = lprRequestDto.isGateUpAction();
+
         log.info("@@ 인식엔진에서 넘어온 데이터 조회 {} ", lprRequestDto.toString());
 
         if (accuracy > 0 && accuracy2 > 0) { //둘다 인식
@@ -245,13 +248,13 @@ public class GatewayService {
                     interlockService.sendSignageServer(requestDto);
                 } else {
                     requestDto.setCarSection(2L);
-                    this.processAfterPayment(requestDto);
+                    this.processAfterPayment(requestDto, isGateAlreadyUp);
                 }
 
             } else {
                 requestDto.setBy(registCar);
-                this.processAfterPayment(requestDto);
-                //                accessAllowed(requestDto);
+                this.processAfterPayment(requestDto, isGateAlreadyUp);
+                //                accessAllowed(requestDto, isGateAlreadyUp);
             }
 
         } else if (StringUtils.contains(carNo, "미인식")) {
@@ -259,7 +262,7 @@ public class GatewayService {
             requestDto.setCarSection(1L);
             if (transitMode == 3) {
                 // 무조건 통과인 경우만 출입 허용
-                accessAllowed(requestDto);
+                accessAllowed(requestDto, isGateAlreadyUp);
             } else {
                 accessBlocked(requestDto);
             }
@@ -295,7 +298,7 @@ public class GatewayService {
                     // 에약 방문 차량 조회
                     if (isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(carNo)) { //아파트너 연동 현장이면
                         log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량 -> 통과 %");
-                        accessAllowed(requestDto);
+                        accessAllowed(requestDto, isGateAlreadyUp);
                     } else {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
                         if (appVisitCar == null) {
@@ -348,7 +351,7 @@ public class GatewayService {
 
                 if (isAllowPass) {
                     // 출입허용
-                    accessAllowed(requestDto);
+                    accessAllowed(requestDto, isGateAlreadyUp);
                 } else {
                     // 출입 차단
 
@@ -356,7 +359,7 @@ public class GatewayService {
                     if (gate.getGateType() == 3 && this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
                         log.info("차량번호 = {}, 통로 = {}({}) 방문차량 주차시간 글로벌 설정 있음", carNo, gateName, gateId);
                         if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
-                            accessAllowed(requestDto);
+                            accessAllowed(requestDto, isGateAlreadyUp);
                         } else { // 아니면 전광판에 표시
                             requestDto.setCarSection(100L); //주차시간초과 차량
                             accessBlocked(requestDto);
@@ -392,15 +395,15 @@ public class GatewayService {
                         if (taxiType > 0) {
                             requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
                         }
-                        accessAllowed(requestDto);
+                        accessAllowed(requestDto, isGateAlreadyUp);
                     }
                 } else if (transitMode == 3) { // 무조건 통과
-                    accessAllowed(requestDto);
+                    accessAllowed(requestDto, isGateAlreadyUp);
                 } else {
                     if(isWarningCar) {
                         accessBlocked(requestDto);
                     } else {
-                        accessAllowed(requestDto);
+                        accessAllowed(requestDto, isGateAlreadyUp);
                     }
                 }
             }
@@ -462,9 +465,9 @@ public class GatewayService {
         return null;
     }
 
-    public void processAfterPayment(InterlockRequestDto requestDto) {
+    public void processAfterPayment(InterlockRequestDto requestDto, boolean isGateAlreadyUp) {
         if (requestDto.isPaymentSuccess()) {
-            accessAllowed(requestDto);
+            accessAllowed(requestDto, isGateAlreadyUp);
         } else {
             if(requestDto.getGatePaymentType() == 1) {
                 interlockService.sendUnmannedPaymentServer(requestDto);
@@ -954,11 +957,14 @@ public class GatewayService {
      *
      * @param requestDto 연동요청 Dto
      */
-    private void accessAllowed(InterlockRequestDto requestDto) {
+    private void accessAllowed(InterlockRequestDto requestDto, boolean isGateAlreadyUp) {
         log.info("NOTE : {}", requestDto.getNote());
         log.info("차량번호 = {}, 통로 = {} 출입 허용",requestDto.getCarNo(), requestDto.getGateName());
         requestDto.setGateStatus(1);
-        interlockService.sendGateServer(requestDto);
+
+        if (!isGateAlreadyUp) { // only open the gate when it is not up yet
+            interlockService.sendGateServer(requestDto);
+        }
         interlockService.sendSignageServer(requestDto);
         interlockService.sendLocalServer(requestDto);
         interlockService.sendHomenetServer(requestDto);
