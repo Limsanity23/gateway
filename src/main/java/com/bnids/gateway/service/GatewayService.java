@@ -179,7 +179,7 @@ public class GatewayService {
         boolean bothHaveNumber = false;
 
         // If the gate is already opened by LPR, return true otherwise false
-        boolean isGateAlreadyUp = lprRequestDto.isGateUpAction();
+        boolean isGateAlreadyUp = lprRequestDto.isGateAlreadyUp();
 
         log.info("@@ 인식엔진에서 넘어온 데이터 조회 {} ", lprRequestDto.toString());
 

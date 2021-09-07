@@ -43,7 +43,7 @@ public class LprRequestDto {
     private Integer plateType;
     private boolean paymentSuccess;
     private String note;
-    private boolean gateUpAction;
+    private boolean gateAlreadyUp;
 
     @Override
     public String toString() {
@@ -56,7 +56,7 @@ public class LprRequestDto {
                 ", plateType=" + plateType +
                 ", paymentSuccess=" + paymentSuccess +
                 ", note=" + note +
-                ", gateUpAction=" + gateUpAction +
+                ", gateAlreadyUp=" + gateAlreadyUp +
                 '}';
     }
 }
