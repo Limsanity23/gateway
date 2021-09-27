@@ -254,7 +254,7 @@ public class GatewayService {
             } else {
                 requestDto.setBy(registCar);
                 this.processAfterPayment(requestDto, isGateAlreadyUp);
-                //                accessAllowed(requestDto, isGateAlreadyUp);
+                                accessAllowed(requestDto, isGateAlreadyUp); //210927 cks 주석처리 되어 있던 것 해제. 테스트 중.
             }
 
         } else if (StringUtils.contains(carNo, "미인식")) {
