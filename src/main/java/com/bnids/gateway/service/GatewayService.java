@@ -254,7 +254,9 @@ public class GatewayService {
             } else {
                 requestDto.setBy(registCar);
                 this.processAfterPayment(requestDto, isGateAlreadyUp);
-                                accessAllowed(requestDto, isGateAlreadyUp); //210927 cks 주석처리 되어 있던 것 해제. 테스트 중.
+                if (requestDto.getGatePaymentType() == 2) { //210927 cks 유인정산의 경우 차단기 열어줌 - 로컬서버에 입주자 차량인 경우 자동으로 차단기를 열어주는 로직이 없음.
+                    accessAllowed(requestDto, isGateAlreadyUp);
+                }
             }
 
         } else if (StringUtils.contains(carNo, "미인식")) {
