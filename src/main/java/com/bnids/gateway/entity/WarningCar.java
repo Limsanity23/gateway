@@ -76,9 +76,13 @@ public class WarningCar extends AuditModel<Long> {
         return warningCarId;
     }
 
-    @Column(precision = 9, nullable = false)
-    @Enumerated(value = EnumType.STRING)
-    private WarningCarRegistEnum registKind;
+    @Column
+    //20211001 cks 현재 해당 컬럼은 row 저장시 별도 값 지정되지 않고 null로만 저장되고 있음.
+    //사용되고 있지 않은 컬럼. 조회시 에러발생하여 enum에서 string 으로 변경함.
+//    @Column(precision = 9, nullable = true)
+//    @Enumerated(value = EnumType.STRING)
+//    private WarningCarRegistEnum registKind;
+    private String registKind;
 
     @Column
     private String registMethodKind;
