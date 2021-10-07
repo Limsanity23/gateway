@@ -253,16 +253,11 @@ public class GatewayService {
 
             } else {
                 requestDto.setBy(registCar);
+                log.info("차량번호: {},  isPaymentSuccess : {}", requestDto.getCarNo(), requestDto.isPaymentSuccess());
                 this.processAfterPayment(requestDto, isGateAlreadyUp);
-
-                if (requestDto.getGatePaymentType() == 2) { //210927 cks 유인정산의 경우 차단기 열어줌 - 로컬서버에 입주자 차량인 경우 자동으로 차단기를 열어주는 로직이 없음.
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    accessAllowed(requestDto, isGateAlreadyUp);
-                }
+//                if (requestDto.getGatePaymentType() == 2) { //210927 cks 유인정산의 경우 차단기 열어줌 - 로컬서버에 입주자 차량인 경우 자동으로 차단기를 열어주는 로직이 없음.
+//                    accessAllowed(requestDto, isGateAlreadyUp);
+//                }
             }
 
         } else if (StringUtils.contains(carNo, "미인식")) {
