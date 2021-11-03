@@ -247,7 +247,14 @@ public class GatewayService {
                     requestDto.setCarSection(1L);
                     interlockService.sendSignageServer(requestDto);
                 } else {
-                    requestDto.setCarSection(2L);
+                    //앱 방문차량인 경우 로컬에서 게이트웨이에서 보내준 파라미터의 carSection을 기준으로 푸시전송여부를 판별하므로
+                    //여기서 앱방문차량인지 확인 후 carSection 셋팅하도록 한다
+//                    requestDto.setCarSection(2L);
+                    AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
+                    if (appVisitCar == null) {
+                        requestDto.setCarSection(2L);
+                    } else requestDto.setCarSection(3L);
+                    log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
                     this.processAfterPayment(requestDto, isGateAlreadyUp);
                 }
 
@@ -477,6 +484,7 @@ public class GatewayService {
             } else {
                 interlockService.sendMannedPaymentServer(requestDto);
             }
+            log.info("*** requestDto : {}", requestDto.toString());
             interlockService.sendSignageServer(requestDto);
         }
     }
