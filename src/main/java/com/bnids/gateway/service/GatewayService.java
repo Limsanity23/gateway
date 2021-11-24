@@ -190,7 +190,7 @@ public class GatewayService {
         } else if (accuracy > 0) {
             carNo = lprRequestDto.getLprCarNo();
         } else { //둘다 미인식
-            carNo = "미인식";
+            carNo = "미인식_";
         }
 
         SystemSetup systemSetup = findSystemSetup();
@@ -268,7 +268,16 @@ public class GatewayService {
             }
 
         } else if (StringUtils.contains(carNo, "미인식")) {
-            requestDto.setCarNo("미인식"+System.currentTimeMillis());
+            String[] sl = carNo.split("_");
+            if (sl != null ) {
+                if (sl.length == 1)
+                    requestDto.setCarNo(carNo+"_"+System.currentTimeMillis());
+                else if (sl.length > 1)
+                    requestDto.setCarNo(sl[1]+"_"+System.currentTimeMillis()); //20211123 cks 인식엔진에서 lprCarNo가 '미인식_xx'으로 넘어온 경우 미인식 유형별로 (ex사람, 오토바이..) 저장하도록 변경.
+            }
+            else requestDto.setCarNo("미인식_"+System.currentTimeMillis());
+            log.info("# 저장용 미인식 carNo : {}", requestDto.getCarNo());
+
             requestDto.setCarSection(1L);
             if (transitMode == 3) {
                 // 무조건 통과인 경우만 출입 허용
