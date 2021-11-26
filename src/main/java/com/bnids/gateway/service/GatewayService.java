@@ -252,8 +252,11 @@ public class GatewayService {
 //                    requestDto.setCarSection(2L);
                     AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
                     if (appVisitCar == null) {
-                        requestDto.setCarSection(2L);
-                    } else requestDto.setCarSection(3L);
+                        if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
+                        else requestDto.setCarSection(2L);
+                    } else {
+                        requestDto.setCarSection(3L);
+                    }
                     log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
                     this.processAfterPayment(requestDto, isGateAlreadyUp);
                 }
@@ -323,8 +326,12 @@ public class GatewayService {
                         if (appVisitCar == null) {
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             long taxiType = getTaxiType(carNo);
+                            boolean isEmergencyType = getEmergenyType(carNo);
+                            log.info("* isEmergencyType: {}", isEmergencyType);
                             if (taxiType > 0) {
                                 requestDto.setCarSection(taxiType);
+                            } else if (isEmergencyType){
+                                requestDto.setCarSection(13L);
                             } else {
                                 List<LogicPattern> logicPatterns = logicPatternRepository.findLogicPatternBycarNo(carNo);
                                 if (logicPatterns.size() == 0) {
@@ -1042,5 +1049,14 @@ public class GatewayService {
     private boolean isAptner(String siteCode) {
         //10068-201207 - 김포 은여울 경남 아너스빌
         return "10068-201207".equals(siteCode);
+    }
+
+    private boolean getEmergenyType(String carNo) {
+        boolean isEmergencyType = false;
+        int region = NumberUtils.toInt(StringUtils.left(StringUtils.right(carNo,8),3), 0);
+        if (region == 998 || region == 999) {
+            isEmergencyType = true;
+        }
+        return isEmergencyType;
     }
 }
