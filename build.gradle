@@ -65,7 +65,7 @@ dependencies {
 
     compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
 
-    compile 'org.apache.logging.log4j:log4j-web:2.12.0'
+    compile 'org.apache.logging.log4j:log4j-web:2.15.0'
 
     // fix 'illegal reflective access operation has occurred' https://github.com/jboss-javassist/javassist/issues/214
     //compile 'org.javassist:javassist:3.25.0-GA'
