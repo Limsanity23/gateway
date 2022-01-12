@@ -193,6 +193,11 @@ public class GatewayService {
             carNo = "미인식_";
         }
 
+        // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
+        if (lprRequestDto.getLprCarNo().length() < 4 || lprRequestDto.getLprCarNo2().length() < 4) {
+            carNo = "미인식";
+        }
+
         SystemSetup systemSetup = findSystemSetup();
         Integer logicType = systemSetup.getLogicType();
         Integer operationLimitSetup = systemSetup.getOperationLimitSetup();
@@ -353,6 +358,7 @@ public class GatewayService {
                         }
                     }
                 } else { //registCar != null
+                    log.info("차량번호 = {}, * 등록차량 *", carNo);
                     requestDto.setBy(registCar);
 
                     if(isRestrictedCar(requestDto)) {
@@ -360,7 +366,6 @@ public class GatewayService {
                     }
                 }
 
-                //
                 log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
