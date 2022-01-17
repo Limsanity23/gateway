@@ -44,6 +44,8 @@ public class LprRequestDto {
     private boolean paymentSuccess;
     private String note;
     private boolean gateAlreadyUp;
+    private String carImageColor;
+    private String carImageColor2;
 
     @Override
     public String toString() {
@@ -57,6 +59,8 @@ public class LprRequestDto {
                 ", paymentSuccess=" + paymentSuccess +
                 ", note=" + note +
                 ", gateAlreadyUp=" + gateAlreadyUp +
+                ", carImageColor=" + carImageColor +
+                ", carImageColor2=" + carImageColor2 +
                 '}';
     }
 }

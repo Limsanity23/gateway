@@ -49,4 +49,5 @@ public class LocalServerRequestDto {
     private Integer restrictLeaveCar;
     private Integer transitMode;
     private String note;
+    private String carImageColor;
 }

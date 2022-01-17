@@ -64,7 +64,7 @@ public class InterlockRequestDto {
     private Integer transitMode;
     private Long unmannedPaymentKioskId;
     private String note;
-
+    private String carImageColor;
 
 
     public void setBy(RegistCar registCar) {

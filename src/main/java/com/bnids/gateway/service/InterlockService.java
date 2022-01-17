@@ -131,6 +131,7 @@ public class InterlockService {
                 .restrictLeaveCar(0)
                 .transitMode(dto.getTransitMode())
                 .note(dto.getNote())
+                .carImageColor(dto.getCarImageColor())
                 .build();
 
         String localServer = appSetting.getLocalServer();
