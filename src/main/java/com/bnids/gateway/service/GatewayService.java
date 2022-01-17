@@ -194,7 +194,7 @@ public class GatewayService {
         }
 
         // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
-        if (lprRequestDto.getLprCarNo().length() < 4 || lprRequestDto.getLprCarNo2().length() < 4) {
+        if (lprRequestDto.getLprCarNo() != null && lprRequestDto.getLprCarNo().length() < 4 || lprRequestDto.getLprCarNo2() != null && lprRequestDto.getLprCarNo2().length() < 4) {
             carNo = "미인식";
         }
 
