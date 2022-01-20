@@ -59,8 +59,6 @@ public class LprRequestDto {
                 ", paymentSuccess=" + paymentSuccess +
                 ", note=" + note +
                 ", gateAlreadyUp=" + gateAlreadyUp +
-                ", carImageColor=" + carImageColor +
-                ", carImageColor2=" + carImageColor2 +
                 '}';
     }
 }
