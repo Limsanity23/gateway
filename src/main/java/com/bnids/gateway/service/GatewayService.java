@@ -176,6 +176,7 @@ public class GatewayService {
         Long gateId = lprRequestDto.getGateId();
         String carNo = lprRequestDto.getLprCarNo();
         String carNo2 = lprRequestDto.getLprCarNo2();
+        String carImage = lprRequestDto.getCarImage();
         boolean bothHaveNumber = false;
 
         // If the gate is already opened by LPR, return true otherwise false
@@ -187,8 +188,7 @@ public class GatewayService {
             bothHaveNumber = true;
         } else if (accuracy2 > 0) {
             carNo = lprRequestDto.getLprCarNo2();
-        } else if (accuracy > 0) {
-            carNo = lprRequestDto.getLprCarNo();
+            carImage = lprRequestDto.getCarImage2();
         } else { //둘다 미인식
             carNo = "미인식_";
         }
@@ -220,7 +220,7 @@ public class GatewayService {
                 .gateType(gate.getGateType())
                 .installOption(systemSetup.getInstallOption())
                 .installDevice(gate.getInstallDevice())
-                .carImage(lprRequestDto.getCarImage())
+                .carImage(carImage)
                 .plateType(lprRequestDto.getPlateType())
                 .leaveCarRestrictionUseYn(leaveCarRestrictionUseYn)
                 .visitAllowableTime(visitAllowableTime)
@@ -499,7 +499,7 @@ public class GatewayService {
     }
 
     public void processAfterPayment(InterlockRequestDto requestDto, boolean isGateAlreadyUp) {
-        if (requestDto.isPaymentSuccess()) {
+        if (requestDto.isPaymentSuccess() || isGateAlreadyUp) {
             accessAllowed(requestDto, isGateAlreadyUp);
         } else {
             if(requestDto.getGatePaymentType() == 1) {
