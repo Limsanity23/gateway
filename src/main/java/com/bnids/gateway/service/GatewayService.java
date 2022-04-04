@@ -189,6 +189,9 @@ public class GatewayService {
         } else if (accuracy2 > 0) {
             carNo = lprRequestDto.getLprCarNo2();
             carImage = lprRequestDto.getCarImage2();
+        } else if (accuracy > 0) {
+            carNo = lprRequestDto.getLprCarNo();
+            carImage = lprRequestDto.getCarImage();
         } else { //둘다 미인식
             carNo = "미인식_";
         }
