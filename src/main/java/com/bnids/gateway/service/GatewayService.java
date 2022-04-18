@@ -185,16 +185,16 @@ public class GatewayService {
 
         log.info("@@ 인식엔진에서 넘어온 데이터 조회 {} ", lprRequestDto.toString());
 
+        log.info("@@ carNo1: {}, carNo2: {}", carNo1, carNo2);
+
         if (carNo1 == null && carNo2 == null) {
             log.info("@@ 인식엔진에서 넘어온 차번호 두개가 모두 null");
             return;
         }
         if (carNo1 == null) {
-            accuracy = 0;
             carNo = "";
             log.info("@@ carNo1 == null");
-        }else{
-            accuracy2 = 0;
+        }else if (carNo2 == null) {
             carNo2 = "";
             log.info("@@ carNo2 == null");
         }
@@ -202,12 +202,14 @@ public class GatewayService {
         
         // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
         if (carNo1.length() < 4) {
+            accuracy = 0;
             carNo1 = "미인식";
         }
         if (carNo2.length() < 4) {
+            accuracy2 = 0;
             carNo2 = "미인식";
         }
-        
+
         if (!carNo1.startsWith("미인식") && carNo2.startsWith("미인식")){
             log.info("@@ carNo1 != 미인식 && carNo2 == 미인식");
             carNo = carNo1;
