@@ -183,9 +183,14 @@ public class GatewayService {
         // If the gate is already opened by LPR, return true otherwise false
         boolean isGateAlreadyUp = lprRequestDto.isGateAlreadyUp();
 
+        log.info("@@ 1 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
+
         log.info("@@ 인식엔진에서 넘어온 데이터 조회 {} ", lprRequestDto.toString());
 
-        log.info("@@ carNo1: {}, carNo2: {}", carNo1, carNo2);
+        log.info("@@ 2 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
+        carNo1 = lprRequestDto.getLprCarNo();
+        carNo2 = lprRequestDto.getLprCarNo2();
+        log.info("@@ 3 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
 
         if (carNo1 == null && carNo2 == null) {
             log.info("@@ 인식엔진에서 넘어온 차번호 두개가 모두 null");
@@ -231,6 +236,7 @@ public class GatewayService {
             carNo = "미인식_";
         }
 
+        log.info("@@ carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
 
         SystemSetup systemSetup = findSystemSetup();
         Integer logicType = systemSetup.getLogicType();
