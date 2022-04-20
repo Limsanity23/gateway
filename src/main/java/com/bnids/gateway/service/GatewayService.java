@@ -374,7 +374,7 @@ public class GatewayService {
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             long taxiType = getTaxiType(carNo);
                             boolean isEmergencyType = getEmergenyType(carNo);
-                            log.info("* isEmergencyType: {}", isEmergencyType);
+                            log.info("* taxiType:{}, isEmergencyType: {}", taxiType, isEmergencyType);
                             if (taxiType > 0) {
                                 requestDto.setCarSection(taxiType);
                             } else if (isEmergencyType){
@@ -412,7 +412,7 @@ public class GatewayService {
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
                     String restrictedMessage = isCustomRestricted(requestDto);
@@ -808,6 +808,7 @@ public class GatewayService {
         return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
                 .map(visitCar -> {
                     long visitCarAllowableTimeMinutes = this.getAllowableTimeMinutes(visitCar.getVisitAllowableTime());
+                    log.info("차량번호 = {}, visitCarAllowableTimeMinutes:{}, carSection: {}",requestDto.getCarNo(), visitCarAllowableTimeMinutes, visitCar.getCarSection());
                     //개별 설정 값이 없거나 0이면 글로벌 설정값을 따름
                     if (visitCarAllowableTimeMinutes == 0) {
                         log.info("차량번호 = {}, 방문차량 주차시간 개별 설정 값이 없음", requestDto.getCarNo());
@@ -815,7 +816,16 @@ public class GatewayService {
                         if (visitCar.getEntvhclDt().plusMinutes(globalMinutes).isAfter(LocalDateTime.now()) ) {
                             return true;
                         }else{
-                            return false;
+//                            return false; //주석처리
+                            //20220419 cks [210607_다산 신안인스빌 퍼스트포레]의 사례로 테스트 중
+                            //화물차량이 가상으로 등록된 동호에 키오스크 세대방문(카섹션:4)으로 출입하는 경우
+                            //통로별 통과차량에 화물차량이 '아니오'로 등록, 글로벌 설정시간이 있고  출차 시 제한 시간을 초과했을 때
+                            //키오스크 세대방문으로 들어왔더라도 위의 2가지 케이스에 걸려 출차가 안됨... 보완하여 테스트 중
+                            if (visitCar.getCarSection() == 4) {
+                                return true;
+                            } else {
+                                return false;
+                            }
                         }
                     }else{
                         //입차시간 + 개별 허용시간이 현재 시간 이후 이면 통과
