@@ -366,7 +366,9 @@ public class GatewayService {
                 } else if (registCar == null) {
                     // 에약 방문 차량 조회
                     if (isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(carNo)) { //아파트너 연동 현장이면
-                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량 -> 통과 %");
+                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
+                        requestDto.setCarSection(3L);
+                        log.info("% 아파트너 연동 현장2 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
                         accessAllowed(requestDto, isGateAlreadyUp);
                     } else {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
