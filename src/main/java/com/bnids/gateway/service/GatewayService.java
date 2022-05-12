@@ -466,9 +466,13 @@ public class GatewayService {
                         requestDto.setCarSection(6L);
                         accessBlocked(requestDto);
                     } else {
-                        long taxiType = getTaxiType(carNo);
-                        if (taxiType > 0) {
-                            requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
+                        //20220512 입주자 차량 중 택시가 있을 때 registCar 에 값이 있어도 TaxiType에 해당되면 carSection을 영업용 차량으로 덮어쓰는 현상이 있어
+                        //registCar가 null 일 경우에만 TaxiType을 체크하도록 수정
+                        if (registCar == null) {
+                            long taxiType = getTaxiType(carNo);
+                            if (taxiType > 0) {
+                                requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
+                            }
                         }
                         accessAllowed(requestDto, isGateAlreadyUp);
                     }
