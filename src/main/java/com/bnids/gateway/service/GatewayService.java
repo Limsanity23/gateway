@@ -618,6 +618,10 @@ public class GatewayService {
             return null;
         }
 
+        if(digitCarNo.length() < 4) {
+            return null;
+        }
+
         List<RegistCar> registCarList = registCarRepository.findByDigitCarNoEndsWithAndAprvlStatusAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(digitCarNo,1, now, now);
         //Stream<RegistCar> registCarStream = registCarList.stream();
 
