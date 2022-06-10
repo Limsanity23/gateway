@@ -301,7 +301,8 @@ public class GatewayService {
                         if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
                         else requestDto.setCarSection(2L);
                     } else {
-                        requestDto.setCarSection(3L);
+//                        requestDto.setCarSection(3L);
+                        requestDto.setBy(appVisitCar);
                     }
                     log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
                     this.processAfterPayment(requestDto, isGateAlreadyUp);
