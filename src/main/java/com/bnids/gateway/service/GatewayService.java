@@ -842,7 +842,8 @@ public class GatewayService {
                         }
                     }
 
-                }).orElseGet(() -> false); //없거나 1개 이상일 경우 통과
+//                }).orElseGet(() -> false); //없거나 1개 이상일 경우 통과
+                }).orElseGet(() -> true); //없거나 1개 이상일 경우 통과 - 20220621 cks 통과처리 하려면 true로 반환되어야 함
     }
 
     /**
