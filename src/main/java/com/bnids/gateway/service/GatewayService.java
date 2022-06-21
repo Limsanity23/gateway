@@ -377,9 +377,12 @@ public class GatewayService {
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             long taxiType = getTaxiType(carNo);
                             boolean isEmergencyType = getEmergenyType(carNo);
-                            log.info("* isEmergencyType: {}", isEmergencyType);
+                            log.info("* getTaxiType: {}, isEmergencyType: {}", taxiType, isEmergencyType);
                             if (taxiType > 0) {
-                                requestDto.setCarSection(taxiType);
+                                long lastCarSection = getLastCarSection(requestDto, Long.valueOf(taxiType).intValue()).longValue();
+                                log.info("* getLastCarSection: {}", lastCarSection);
+                                //화물차량이 키오스크를 누르고 입차하는 경우(키오스크 세대방분) 출차할 때에도 입차시 carSection을 유지할 수 있도록 처리
+                                requestDto.setCarSection(lastCarSection);
                             } else if (isEmergencyType){
                                 requestDto.setCarSection(13L);
                             } else {
@@ -411,11 +414,11 @@ public class GatewayService {
                     }
                 }
 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
                     String restrictedMessage = isCustomRestricted(requestDto);
