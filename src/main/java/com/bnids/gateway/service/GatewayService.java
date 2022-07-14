@@ -177,32 +177,70 @@ public class GatewayService {
         Integer accuracy2 = lprRequestDto.getAccuracy2();
         if (accuracy2 == null) accuracy2 = 0;
         Long gateId = lprRequestDto.getGateId();
-        String carNo = lprRequestDto.getLprCarNo();
+        String carNo1 = lprRequestDto.getLprCarNo();
         String carNo2 = lprRequestDto.getLprCarNo2();
+        String carNo = "";
         String carImage = lprRequestDto.getCarImage();
         boolean bothHaveNumber = false;
 
         // If the gate is already opened by LPR, return true otherwise false
         boolean isGateAlreadyUp = lprRequestDto.isGateAlreadyUp();
 
+        log.info("@@ 1 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
+
         log.info("@@ 인식엔진에서 넘어온 데이터 조회 {} ", lprRequestDto.toString());
 
-        if (accuracy > 0 && accuracy2 > 0) { //둘다 인식
+        log.info("@@ 2 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
+        carNo1 = lprRequestDto.getLprCarNo();
+        carNo2 = lprRequestDto.getLprCarNo2();
+        log.info("@@ 3 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
+
+        if (carNo1 == null && carNo2 == null) {
+            log.info("@@ 인식엔진에서 넘어온 차번호 두개가 모두 null");
+            return;
+        }
+        if (carNo1 == null) {
+            carNo = "";
+            log.info("@@ carNo1 == null");
+        }else if (carNo2 == null) {
+            carNo2 = "";
+            log.info("@@ carNo2 == null");
+        }
+
+
+        // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
+        if (carNo1.length() < 4) {
+            accuracy = 0;
+            carNo1 = "미인식";
+        }
+        if (carNo2.length() < 4) {
+            accuracy2 = 0;
+            carNo2 = "미인식";
+        }
+
+        if (!carNo1.startsWith("미인식") && carNo2.startsWith("미인식")){
+            log.info("@@ carNo1 != 미인식 && carNo2 == 미인식");
+            carNo = carNo1;
+            carImage = lprRequestDto.getCarImage();
+        } else if (carNo1.startsWith("미인식") && !carNo2.startsWith("미인식")) {
+            log.info("@@ carNo1 == 미인식 && carNo2 != 미인식");
+            carNo = carNo2;
+            carImage = lprRequestDto.getCarImage2();
+        }else if (accuracy > 0 && accuracy2 > 0) { //둘다 인식
             bothHaveNumber = true;
+            carNo = carNo1;
         } else if (accuracy2 > 0) {
-            carNo = lprRequestDto.getLprCarNo2();
+            carNo = carNo2;
             carImage = lprRequestDto.getCarImage2();
         } else if (accuracy > 0) {
-            carNo = lprRequestDto.getLprCarNo();
+            carNo = carNo1;
             carImage = lprRequestDto.getCarImage();
         } else { //둘다 미인식
             carNo = "미인식_";
         }
 
-        // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
-        if (lprRequestDto.getLprCarNo() != null && lprRequestDto.getLprCarNo().length() < 4 || lprRequestDto.getLprCarNo2() != null && lprRequestDto.getLprCarNo2().length() < 4) {
-            carNo = "미인식";
-        }
+        log.info("@@ carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
+
 
         SystemSetup systemSetup = findSystemSetup();
         Integer logicType = systemSetup.getLogicType();
@@ -344,7 +382,7 @@ public class GatewayService {
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             long taxiType = getTaxiType(carNo);
                             boolean isEmergencyType = getEmergenyType(carNo);
-                            log.info("* isEmergencyType: {}", isEmergencyType);
+                            log.info("* taxiType:{}, isEmergencyType: {}", taxiType, isEmergencyType);
                             if (taxiType > 0) {
                                 requestDto.setCarSection(taxiType);
                             } else if (isEmergencyType){
@@ -389,7 +427,7 @@ public class GatewayService {
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
                     String restrictedMessage = isCustomRestricted(requestDto);
@@ -810,7 +848,16 @@ public class GatewayService {
                         if (visitCar.getEntvhclDt().plusMinutes(globalMinutes).isAfter(LocalDateTime.now()) ) {
                             return true;
                         }else{
-                            return false;
+//                            return false; //주석처리
+                            //20220419 cks [210607_다산 신안인스빌 퍼스트포레]의 사례로 테스트 중
+                            //화물차량이 가상으로 등록된 동호에 키오스크 세대방문(카섹션:4)으로 출입하는 경우
+                            //통로별 통과차량에 화물차량이 '아니오'로 등록, 글로벌 설정시간이 있고  출차 시 제한 시간을 초과했을 때
+                            //키오스크 세대방문으로 들어왔더라도 위의 2가지 케이스에 걸려 출차가 안됨... 보완하여 테스트 중
+                            if (visitCar.getCarSection() == 4) {
+                                return true;
+                            } else {
+                                return false;
+                            }
                         }
                     }else{
                         //입차시간 + 개별 허용시간이 현재 시간 이후 이면 통과
