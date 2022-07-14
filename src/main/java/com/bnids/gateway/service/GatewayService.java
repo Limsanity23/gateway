@@ -301,7 +301,8 @@ public class GatewayService {
                         if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
                         else requestDto.setCarSection(2L);
                     } else {
-                        requestDto.setCarSection(3L);
+//                        requestDto.setCarSection(3L);
+                        requestDto.setBy(appVisitCar);
                     }
                     log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
                     this.processAfterPayment(requestDto, isGateAlreadyUp);
@@ -366,7 +367,9 @@ public class GatewayService {
                 } else if (registCar == null) {
                     // 에약 방문 차량 조회
                     if (isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(carNo)) { //아파트너 연동 현장이면
-                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량 -> 통과 %");
+                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
+                        requestDto.setCarSection(3L);
+                        log.info("% 아파트너 연동 현장2 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
                         accessAllowed(requestDto, isGateAlreadyUp);
                     } else {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
@@ -376,7 +379,10 @@ public class GatewayService {
                             boolean isEmergencyType = getEmergenyType(carNo);
                             log.info("* taxiType:{}, isEmergencyType: {}", taxiType, isEmergencyType);
                             if (taxiType > 0) {
-                                requestDto.setCarSection(taxiType);
+                                long lastCarSection = getLastCarSection(requestDto, Long.valueOf(taxiType).intValue()).longValue();
+                                log.info("* getLastCarSection: {}", lastCarSection);
+                                //화물차량이 키오스크를 누르고 입차하는 경우(키오스크 세대방분) 출차할 때에도 입차시 carSection을 유지할 수 있도록 처리
+                                requestDto.setCarSection(lastCarSection);
                             } else if (isEmergencyType){
                                 requestDto.setCarSection(13L);
                             } else {
@@ -408,11 +414,11 @@ public class GatewayService {
                     }
                 }
 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
 
-                log.info("차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
                     String restrictedMessage = isCustomRestricted(requestDto);
@@ -464,9 +470,13 @@ public class GatewayService {
                         requestDto.setCarSection(6L);
                         accessBlocked(requestDto);
                     } else {
-                        long taxiType = getTaxiType(carNo);
-                        if (taxiType > 0) {
-                            requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
+                        //20220512 입주자 차량 중 택시가 있을 때 registCar 에 값이 있어도 TaxiType에 해당되면 carSection을 영업용 차량으로 덮어쓰는 현상이 있어
+                        //registCar가 null 일 경우에만 TaxiType을 체크하도록 수정
+                        if (registCar == null) {
+                            long taxiType = getTaxiType(carNo);
+                            if (taxiType > 0) {
+                                requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
+                            }
                         }
                         accessAllowed(requestDto, isGateAlreadyUp);
                     }
@@ -609,6 +619,10 @@ public class GatewayService {
         String digitCarNo = digitCarNo(carNo);
         log.info("등록 차량 조회(숫자일치로직) 차량번호 = {}({})", carNo, digitCarNo);
         if ("".equals(digitCarNo)) {
+            return null;
+        }
+
+        if(digitCarNo.length() < 4) {
             return null;
         }
 
@@ -838,7 +852,8 @@ public class GatewayService {
                         }
                     }
 
-                }).orElseGet(() -> false); //없거나 1개 이상일 경우 통과
+//                }).orElseGet(() -> false); //없거나 1개 이상일 경우 통과
+                }).orElseGet(() -> true); //없거나 1개 이상일 경우 통과 - 20220621 cks 통과처리 하려면 true로 반환되어야 함
     }
 
     /**
