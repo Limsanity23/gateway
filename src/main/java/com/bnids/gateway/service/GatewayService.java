@@ -91,6 +91,9 @@ public class GatewayService {
     private final SettingsRepository settingsRepository;
 
     @NonNull
+    private final ReservationRepository reservationRepository;
+
+    @NonNull
     private final AptnerService aptnerService;
 
     private final List<AptnerReserve> reserveCarList = new ArrayList<>();
@@ -204,7 +207,11 @@ public class GatewayService {
             log.info("@@ carNo2 == null");
         }
 
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> reservation
         // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
         if (carNo1.length() < 4) {
             accuracy = 0;
@@ -297,7 +304,8 @@ public class GatewayService {
                     //여기서 앱방문차량인지 확인 후 carSection 셋팅하도록 한다
 //                    requestDto.setCarSection(2L);
                     AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
-                    if (appVisitCar == null) {
+                    Reservation reservation = this.findReservationCar(carNo);
+                    if (appVisitCar == null && reservation == null) {
                         if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
                         else requestDto.setCarSection(2L);
                     } else {
@@ -373,7 +381,10 @@ public class GatewayService {
                         accessAllowed(requestDto, isGateAlreadyUp);
                     } else {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
-                        if (appVisitCar == null) {
+                        Reservation reservation = this.findReservationCar(carNo);
+                        log.info("* AppVisitCar: {},  Reservation: {}", appVisitCar, reservation);
+                        if (appVisitCar == null && reservation == null) {
+                            log.info("* AppVisitCar 와 Reservation 모두 내역이 없음");
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
                             long taxiType = getTaxiType(carNo);
                             boolean isEmergencyType = getEmergenyType(carNo);
@@ -402,7 +413,14 @@ public class GatewayService {
                                 }
                             }
                         } else {
-                            requestDto.setBy(appVisitCar);
+                            if (appVisitCar != null) {
+                                log.info("* appVisitCar set");
+                                requestDto.setBy(appVisitCar);
+                            } else if (reservation != null) {
+                                log.info("* reservation set");
+                                requestDto.setByReservation(reservation);
+                            }
+
                         }
                     }
                 } else { //registCar != null
@@ -417,8 +435,8 @@ public class GatewayService {
                 log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
-
                 log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
+
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
                     String restrictedMessage = isCustomRestricted(requestDto);
@@ -454,7 +472,13 @@ public class GatewayService {
                     AppVisitCar appVisitCar = findAppVisitCar(carNo);
 
                     if (appVisitCar == null) {
-                        requestDto.setCarSection(2L);
+                        log.info("* AppVisitCar에 등록내역 없음 > Reservation에서 등록내역 조회 ...");
+                        Reservation reservation = findReservationCar(carNo);
+                        if (reservation == null) {
+                            requestDto.setCarSection(2L);
+                        } else {
+                            requestDto.setCarSection(3L);
+                        }
                     } else {
                         requestDto.setBy(appVisitCar);
                     }
@@ -695,6 +719,18 @@ public class GatewayService {
     private AppVisitCar findAppVisitCar(String carNo) {
         LocalDateTime today = LocalDateTime.now();
         return appVisitCarRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream()
+                .findFirst().orElse(null);
+    }
+
+    /**
+     * 앱 방문 차량 (새 방문예약)
+     *
+     * @param carNo 차량번호
+     * @return 앱 방문 차량
+     */
+    private Reservation findReservationCar(String carNo) {
+        LocalDateTime today = LocalDateTime.now();
+        return reservationRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream()
                 .findFirst().orElse(null);
     }
 
