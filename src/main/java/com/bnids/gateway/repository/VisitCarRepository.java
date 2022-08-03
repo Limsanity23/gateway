@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface VisitCarRepository extends BaseJPARepository<VisitCar, Long> {
     Optional<VisitCar> findById(Long id);
     Optional<VisitCar> findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(String carNo);
+    Optional<VisitCar> findTopByCarNoOrderByEntvhclDtDesc(String carNo);
 
     @Query(value = 
     "SELECT ifnull(sum(TIMESTAMPDIFF(MINUTE, entvhcl_dt, lvvhcl_dt)),0) / 60 AS HOURS " +

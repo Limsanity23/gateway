@@ -207,11 +207,6 @@ public class GatewayService {
             log.info("@@ carNo2 == null");
         }
 
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> reservation
         // 차량번호가 4자리 미만으로 넘어온 경우 미인식으로 처리하기로 함 20220112
         if (carNo1.length() < 4) {
             accuracy = 0;
@@ -455,7 +450,10 @@ public class GatewayService {
                     // 출구인 경우 방문차량 주차시간 설정에 따른 예외 허용
                     if (gate.getGateType() == 3 && this.hasGlobalAllowableTime(requestDto)) { //글로벌 설정이 있는 상태에서
                         log.info("차량번호 = {}, 통로 = {}({}) 방문차량 주차시간 글로벌 설정 있음", carNo, gateName, gateId);
-                        if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
+                        boolean isAllowableTime = inAllowableTime(requestDto);
+                        log.info("* 차량번호 = {} inAllowableTime = {}", carNo, isAllowableTime);
+//                        if (inAllowableTime(requestDto)) { // 제한시간 이내이면 허용
+                        if (isAllowableTime) { // 제한시간 이내이면 허용
                             accessAllowed(requestDto, isGateAlreadyUp);
                         } else { // 아니면 전광판에 표시
                             requestDto.setCarSection(100L); //주차시간초과 차량
@@ -855,13 +853,14 @@ public class GatewayService {
             return true;
         }
 
-        return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
+//        return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo()) //cks 20220802 아래 로직으로 테스트중... 여러번 출차시도를 하는 차량의 경우 출차시각을 계속 업데이트 하기로 했기 때문...
+        return visitCarRepository.findTopByCarNoOrderByEntvhclDtDesc(requestDto.getCarNo())
                 .map(visitCar -> {
                     long visitCarAllowableTimeMinutes = this.getAllowableTimeMinutes(visitCar.getVisitAllowableTime());
-                    log.info("차량번호 = {}, visitCarAllowableTimeMinutes:{}, carSection: {}",requestDto.getCarNo(), visitCarAllowableTimeMinutes, visitCar.getCarSection());
+                    log.info("#차량번호 = {}, visitCarAllowableTimeMinutes:{}, carSection: {}",requestDto.getCarNo(), visitCarAllowableTimeMinutes, visitCar.getCarSection());
                     //개별 설정 값이 없거나 0이면 글로벌 설정값을 따름
                     if (visitCarAllowableTimeMinutes == 0) {
-                        log.info("차량번호 = {}, 방문차량 주차시간 개별 설정 값이 없음", requestDto.getCarNo());
+                        log.info("#차량번호 = {}, 방문차량 주차시간 개별 설정 값이 없음", requestDto.getCarNo());
                         //입차시간 + 글로벌 허용시간이 현재 시간 이후 이면 통과
                         if (visitCar.getEntvhclDt().plusMinutes(globalMinutes).isAfter(LocalDateTime.now()) ) {
                             return true;
@@ -879,7 +878,7 @@ public class GatewayService {
                         }
                     }else{
                         //입차시간 + 개별 허용시간이 현재 시간 이후 이면 통과
-                        log.info("차량번호 = {}, 개별 차량 설정 분:{}",requestDto.getCarNo(), visitCarAllowableTimeMinutes);
+                        log.info("#차량번호 = {}, 개별 차량 설정 분:{}",requestDto.getCarNo(), visitCarAllowableTimeMinutes);
 
                         if (visitCar.getEntvhclDt().plusMinutes(visitCarAllowableTimeMinutes).isAfter(LocalDateTime.now()) ) {
                             return true;
@@ -1058,6 +1057,7 @@ public class GatewayService {
                     log.info("차량번호 = {}, 통로 = {}({}) 제한 예외 - carSection: {}",requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId(), requestDto.getCarSection());
                 }else if (parkingHours > Double.parseDouble(setting.getValue())) {
                     requestDto.setCarSection(100L); //주차시간초과 차량
+                    log.info("차량번호 = {} 세대방문 월허용 주차시간 초과",requestDto.getCarNo());
                     restrictedMessage = "세대방문 차량의\n 월허용 주차시간 제한 초과입니다.\n 관리실에 문의하세요.";
                 }
 
