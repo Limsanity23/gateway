@@ -282,12 +282,15 @@ public class GatewayService {
         // 결제를 보낸다.
         if ("Y".equals(systemSetup.getPaymentEnabledYn()) && gate.getGateType() > 2 && transitMode == 4) {
             // 결제 후 통과 시작
-            Optional<UnmannedPaymentKiosk> unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(requestDto.getGateId());
-            unmannedPaymentKiosk.ifPresent(
-                    paymentKiosk -> {
-                        requestDto.setUnmannedPaymentKioskId(paymentKiosk.getId());
-                    }
-            );
+            if (gate.getGatePaymentType() == 1) {
+                Optional<UnmannedPaymentKiosk> unmannedPaymentKiosk = unmannedPaymentKioskRepository.findByGateId(requestDto.getGateId());
+                unmannedPaymentKiosk.ifPresent(
+                        paymentKiosk -> {
+                            requestDto.setUnmannedPaymentKioskId(paymentKiosk.getId());
+                        }
+                );
+            }
+
 
             if (registCar == null) {
                 // 출입 차단
@@ -304,8 +307,14 @@ public class GatewayService {
                         if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
                         else requestDto.setCarSection(2L);
                     } else {
-//                        requestDto.setCarSection(3L);
-                        requestDto.setBy(appVisitCar);
+//                        requestDto.setCarSection(3L);\
+                        if (appVisitCar != null) {
+                            requestDto.setBy(appVisitCar);
+                        }
+                        if (reservation != null) {
+                            requestDto.setByReservation(reservation);
+                        }
+
                     }
                     log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
                     this.processAfterPayment(requestDto, isGateAlreadyUp);
@@ -476,8 +485,10 @@ public class GatewayService {
                             requestDto.setCarSection(2L);
                         } else {
                             requestDto.setCarSection(3L);
+                            requestDto.setByReservation(reservation);
                         }
                     } else {
+                        requestDto.setCarSection(3L);
                         requestDto.setBy(appVisitCar);
                     }
                 } else {
