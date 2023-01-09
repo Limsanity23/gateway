@@ -107,18 +107,20 @@ public class GatewayService {
         log.info("* GatewayService init *");
         SystemSetup system = findSystemSetup();
         try {
-            if (isAptner(system.getSiteCode())) {
-                List<AptnerReserve> list = aptnerService.getAptnerVisitAll();
-                log.info("* 아파트너 방문예약 건수 : {}",list.size());
-                reserveCarList.addAll(list);
+            log.info("* 사이트코드 : {}, 아파트너 연동여부 : {}",system.getSiteCode(), aptnerService.isAptner(system.getSiteCode()));
+            if (aptnerService.isAptner(system.getSiteCode())) {
+                List<AptnerReserve> list = aptnerService.getAptnerVisitAll(system.getSiteCode());
+                if(list != null) {
+                    log.info("* 아파트너 방문예약 건수 : {}",list.size());
+                    reserveCarList.addAll(list);
+                    log.info("reserveCarList empty 여부: {}", reserveCarList.isEmpty());
 
-                if ( reserveCarList != null) {
-                    for (int i=0; i < reserveCarList.size(); i++) {
-                        log.info("* carNo: {}", reserveCarList.get(i).getCarNo());
-                        log.info("* dong: {}", reserveCarList.get(i).getDong());
-                        log.info("* ho: {}", reserveCarList.get(i).getHo());
+                    if ( reserveCarList != null) {
+                        for (AptnerReserve rev : reserveCarList) {
+                            log.info("* carNo: {}, dong: {}, ho: {}", rev.getCarNo(), rev.getDong(), rev.getHo());
+                        }
+                        reserveCarListLoadTime = System.currentTimeMillis();
                     }
-                    reserveCarListLoadTime = System.currentTimeMillis();
                 }
             }
 
@@ -127,7 +129,7 @@ public class GatewayService {
         }
     }
 
-    public boolean checkAptnerReserve(String carNo){
+    public boolean checkAptnerReserve(String siteCode, String carNo){
         log.info("** 아파트너 방문예약 등록여부 확인 시작 : {} *", carNo);
         long now = System.currentTimeMillis();
         log.info("** now - reserveCarListLoadTime: {}, 목록유효시간: {}", now - reserveCarListLoadTime, reserveCarListCacheDuration);
@@ -137,7 +139,7 @@ public class GatewayService {
                 log.info("* reserveCarList 비어 있거나 유효시간이 지남 *");
                 synchronized (reserveCarList) {
                     if (reserveCarList.isEmpty()  || now - reserveCarListLoadTime > reserveCarListCacheDuration) {
-                        List<AptnerReserve> result = aptnerService.getAptnerVisitAll();
+                        List<AptnerReserve> result = aptnerService.getAptnerVisitAll(siteCode);
                         log.info("# 아파트너 방문예약 result size: {}", result.size());
                         reserveCarList.clear();
                         reserveCarList.addAll(result);
@@ -158,7 +160,7 @@ public class GatewayService {
                     log.info("* {} 는 아파트너 방문예약 차량 *", carNo);
                     isReserve = true;
                     //입차통보 api 호출
-                    aptnerService.sendAccessIn(item.getCarNo(), item.getDong(), item.getHo());
+                    aptnerService.sendAccessIn(siteCode, item.getCarNo(), item.getDong(), item.getHo());
                     break;
                 }
             }
@@ -378,7 +380,7 @@ public class GatewayService {
                     requestDto.setCarSection(6L);
                 } else if (registCar == null) {
                     // 에약 방문 차량 조회
-                    if (isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(carNo)) { //아파트너 연동 현장이면
+                    if (aptnerService.isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(systemSetup.getSiteCode(), carNo)) { //아파트너 연동 현장이면
                         log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
                         requestDto.setCarSection(3L);
                         log.info("% 아파트너 연동 현장2 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
@@ -1165,10 +1167,7 @@ public class GatewayService {
         return carNo.replaceAll("[^0-9]", "");
     }
 
-    private boolean isAptner(String siteCode) {
-        //10068-201207 - 김포 은여울 경남 아너스빌
-        return "10068-201207".equals(siteCode);
-    }
+
 
     private boolean getEmergenyType(String carNo) {
         boolean isEmergencyType = false;
