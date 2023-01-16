@@ -39,6 +39,7 @@ public class AptnerService {
     public void init(){
         log.info("*************** AptnerService init ***************");
         aptCodeMap.put("10502-221107", "A41227212"); //화정별빛마을9단지
+        aptCodeMap.put("02828-230101", "A13606201"); //성북 브라운스톤 돈암
     }
 
     public boolean isAptner(String siteCode) {
@@ -67,10 +68,10 @@ public class AptnerService {
 
         Mono.just(aptResponse)
                 .doOnError(t -> {
-                    log.error("아파트너 방문 예약 전체 목록 API 실패 응답 = {}", t);
+                    log.error("아파트너 방문 예약 전체 목록 API 실패 응답 = {}", t.getMessage());
                 })
                 .subscribe(s -> {
-                    log.info("아파트너 방문 예약 전체 목록 API 성공 응답 = {}", s.toString());
+                    log.info("아파트너 방문 예약 전체 목록 API 성공 응답 = {}", s);
                 });
 
         return aptResponse.getResult();
