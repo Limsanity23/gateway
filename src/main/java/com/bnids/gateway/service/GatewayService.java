@@ -129,8 +129,9 @@ public class GatewayService {
         }
     }
 
-    public boolean checkAptnerReserve(String siteCode, String carNo){
-        log.info("** 아파트너 방문예약 등록여부 확인 시작 : {} *", carNo);
+//    public boolean checkAptnerReserve(String siteCode, String carNo){
+    public InterlockRequestDto checkAptnerReserve(String siteCode, InterlockRequestDto requestDto){
+        log.info("** 아파트너 방문예약 등록여부 확인 시작 : {} - 동:{}. 호:{} *", requestDto.getCarNo(), requestDto.getAddressDong(), requestDto.getAddressHo());
         long now = System.currentTimeMillis();
         log.info("** now - reserveCarListLoadTime: {}, 목록유효시간: {}", now - reserveCarListLoadTime, reserveCarListCacheDuration);
         boolean isReserve = false;
@@ -156,21 +157,23 @@ public class GatewayService {
             }
 
             for (AptnerReserve item : reserveCarList) {
-                if (item.getCarNo().equals(carNo)) {
-                    log.info("* {} 는 아파트너 방문예약 차량 *", carNo);
+                if (item.getCarNo().equals(requestDto.getCarNo())) {
+                    log.info("* {} 는 아파트너 방문예약 차량 *", requestDto.getCarNo());
                     isReserve = true;
                     //입차통보 api 호출
                     aptnerService.sendAccessIn(siteCode, item.getCarNo(), item.getDong(), item.getHo());
+                    requestDto.setAddressDong(item.getDong());
+                    requestDto.setAddressHo(item.getHo());
                     break;
                 }
             }
 
-            if (!isReserve) log.info("* {} 는 아파트너 방문예약 차량이 아님 *", carNo);
+            if (!isReserve) log.info("* {} 는 아파트너 방문예약 차량이 아님 *", requestDto.getCarNo());
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return isReserve;
+        return requestDto;
     }
 
     public void interlock(LprRequestDto lprRequestDto) {
@@ -380,10 +383,9 @@ public class GatewayService {
                     requestDto.setCarSection(6L);
                 } else if (registCar == null) {
                     // 에약 방문 차량 조회
-                    if (aptnerService.isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(systemSetup.getSiteCode(), carNo)) { //아파트너 연동 현장이면
-                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
+                    if (aptnerService.isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(systemSetup.getSiteCode(), requestDto).getAddressDong() != null) { //아파트너 연동 현장이면
                         requestDto.setCarSection(3L);
-                        log.info("% 아파트너 연동 현장2 - 아파트너 방문예약 차량:{}, 등록항목:{} -> 통과 %", carNo, requestDto.getCarSection());
+                        log.info("% 아파트너 연동 현장 - 아파트너 방문예약 차량:{}, 등록항목:{}, 동-호: {} - {} -> 통과 %", carNo, requestDto.getCarSection(), requestDto.getAddressHo(), requestDto.getAddressHo());
                         accessAllowed(requestDto, isGateAlreadyUp);
                     } else {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
