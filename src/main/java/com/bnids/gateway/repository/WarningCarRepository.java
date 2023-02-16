@@ -38,7 +38,7 @@ import java.util.Optional;
 public interface WarningCarRepository extends BaseJPARepository<WarningCar, Long> {
     boolean existsByCarNo(String carNo);
 
-    @Query("select w from WarningCar w where w.carNo = :carNo and w.registStatus != 1 ")
+    @Query("select w from WarningCar w where w.carNo = :carNo and w.registStatus != 1 and w.DeletedDt is null")
     List<WarningCar> findWarningCarByCarNoAndStatus(@Param("carNo")String carNo);
 
     @Query("select w from WarningCar w where w.carNo = :carNo order by w.warningCarId desc ")
