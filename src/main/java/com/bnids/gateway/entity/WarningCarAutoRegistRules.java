@@ -4,6 +4,7 @@ import com.bnids.core.base.AuditModel;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
@@ -34,6 +35,9 @@ public class WarningCarAutoRegistRules extends AuditModel<Long> {
 
     @Column
     private String useYn;
+
+    @Column
+    private LocalDateTime applyDt;                              //정책 적용(시행)일자
 
     @Override
     public Long getId() {
