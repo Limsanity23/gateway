@@ -19,7 +19,7 @@ public class WarningCarAutoRegistRulesDto {
     private WarningCarRegistEnum warinigCarRulesSection;
     private String carNo;
     private LocalDateTime deletedDt;
-    private LocalDateTime applyDt
+    private LocalDateTime applyDt;
 
 
     public WarningCarAutoRegistRulesDto of(WarningCarAutoRegistRules warningCarAutoRegistRules) {
