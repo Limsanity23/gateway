@@ -84,7 +84,7 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         }
 
         if( dto.getWarinigCarRulesSection().equals(WarningCarRegistEnum.PARKING_DURATION_VIOLATION) ) {
-            builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(HOUR, {0}, {1})", visitCar.entvhclDt , visitCar.lvvhclDt).gt(dto.getParkingTime()));
+            builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(HOUR, {0}, {1})", visitCar.entvhclDt , visitCar.lvvhclDt).goe(dto.getParkingTime()));
         }
 
         return builder;
