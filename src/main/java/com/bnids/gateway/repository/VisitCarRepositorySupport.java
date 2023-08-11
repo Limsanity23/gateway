@@ -84,6 +84,12 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         }
 
         if( dto.getWarinigCarRulesSection().equals(WarningCarRegistEnum.PARKING_DURATION_VIOLATION) ) {
+            //20230811 수정 - [간편버튼 항목으로 경고차량정책을 등록한 경우]
+            //간편버튼 입차 후 방문예약 등록하여 출차하였을 때
+            //visitCar 에는 carSection이 간편버튼 -> 예약방문으로 수정되지 않고 그대로 남아있으므로
+            //차후 간편버튼으로 입출차시 주차시간 위반이 되면 경고차량으로 자동등록된다
+            //주차시간위반 조건에 동호 정보가 없는 경우만 계산하도록 조건 추가(방문예약으로 입출차시 동호정보를 남기게 되어있으므로)
+            builder.and(visitCar.visitDong.isNull()).and(visitCar.visitHo.isNull());
             builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(HOUR, {0}, {1})", visitCar.entvhclDt , visitCar.lvvhclDt).goe(dto.getParkingTime()));
         }
 
