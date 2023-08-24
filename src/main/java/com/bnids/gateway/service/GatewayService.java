@@ -375,7 +375,7 @@ public class GatewayService {
                 }
             }
 
-            boolean isWarningCar = isWarningCar(carNo);
+            boolean isWarningCar = isWarningCar(carNo, requestDto);
             if (transitMode == 1) { // 획인후 통과
                 boolean isAllowPass = true;
 
@@ -533,21 +533,21 @@ public class GatewayService {
         long afterTime = System.currentTimeMillis();
         long elapseTime  = afterTime - beforeTime;
 
-        // 경고차량 삭제 차량인지 여부 확인
-        // 결제 후 통과와 결제 후 통과가 아닌 경우를 생각해 보면
-        // 단순하게 여기서 생각할건 넘겨야할
-
-        // 삭제된 경고차량 여부
-        List<WarningCar> warningCars = warningCarRepository.findWarningCarByCarNo(requestDto.getCarNo());
-        WarningCar warningCar = warningCars.size() > 0 ? warningCars.get(0) : null;
-        if(warningCar != null && warningCar.getRegistStatus() == 1) {
-            requestDto.setWarningCarDeleteDt(warningCar.getDeletedDt());
-        }
-
-        WarningCarAutoRegistRulesDto autoRegistWarningCarRulesDto = this.autoRegistWarningCar(requestDto);
-        if(autoRegistWarningCarRulesDto != null) {
-            registAutoWarningCar(requestDto, autoRegistWarningCarRulesDto);
-        }
+//        // 경고차량 삭제 차량인지 여부 확인
+//        // 결제 후 통과와 결제 후 통과가 아닌 경우를 생각해 보면
+//        // 단순하게 여기서 생각할건 넘겨야할
+//
+//        // 삭제된 경고차량 여부
+//        List<WarningCar> warningCars = warningCarRepository.findWarningCarByCarNo(requestDto.getCarNo());
+//        WarningCar warningCar = warningCars.size() > 0 ? warningCars.get(0) : null;
+//        if(warningCar != null && warningCar.getRegistStatus() == 1) {
+//            requestDto.setWarningCarDeleteDt(warningCar.getDeletedDt());
+//        }
+//
+//        WarningCarAutoRegistRulesDto autoRegistWarningCarRulesDto = this.autoRegistWarningCar(requestDto);
+//        if(autoRegistWarningCarRulesDto != null) {
+//            registAutoWarningCar(requestDto, autoRegistWarningCarRulesDto);
+//        }
 
         // 결제 후 통과가 아니여도 정산을 사용하면 요금계산은 되어야 한다.
         if (elapseTime > 1000) {
@@ -556,6 +556,7 @@ public class GatewayService {
     }
 
     public void registAutoWarningCar(InterlockRequestDto requestDto, WarningCarAutoRegistRulesDto warningCarAutoRegistRulesDto) {
+        log.info(">>>>>>>>>>>>>>>> registAutoWarningCar start <<<<<<<<<<<<<<<<<<<<<<");
         WarningCarDto.Create create = WarningCarDto.Create.builder()
                 .carNo(requestDto.getCarNo())
                 .carSection(requestDto.getCarSection())
@@ -565,9 +566,11 @@ public class GatewayService {
                 .register("시스템")
                 .build();
         warningCarRepository.save(create.toEntity());
+        log.info(">>>>>>>>>>>>>>>> registAutoWarningCar end <<<<<<<<<<<<<<<<<<<<<<");
     }
 
     public WarningCarAutoRegistRulesDto autoRegistWarningCar(InterlockRequestDto requestDto) {
+        log.info(">>>>>>>>>>>>>>>> autoRegistWarningCar 차량번호: {}", requestDto.getCarNo());
         List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findByCarSection(requestDto.getCarSection());
         for(WarningCarAutoRegistRules rule : rules) {
             WarningCarAutoRegistRulesDto warningCarAutoRegistRules = WarningCarAutoRegistRulesDto
@@ -741,10 +744,28 @@ public class GatewayService {
      * @param carNo 차량번호
      * @return 앱 방문 차량
      */
-    private Reservation findReservationCar(String carNo) {
+    /*private Reservation findReservationCar(String carNo) {
         LocalDateTime today = LocalDateTime.now();
         return reservationRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream()
                 .findFirst().orElse(null);
+    }*/
+    private Reservation findReservationCar(String carNo) {
+        List<Settings> timeList = settingsRepository.findEntryExitBufferTime();
+        int entryBufferTime = 60; // 방문예약차량 입차 시 기본 여유시간
+        int exitBufferTime = 60; // 방문예약차량 출차 시 기본 여유시간
+
+        if (timeList.size() >= 2) {
+            entryBufferTime = Integer.parseInt(timeList.get(0).getValue());
+            exitBufferTime = Integer.parseInt(timeList.get(1).getValue());
+        }
+
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime accessPeriodBeginDt = today.plusMinutes(entryBufferTime);
+        LocalDateTime accessPeriodEndDt = today.minusMinutes(exitBufferTime);
+
+        return reservationRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(
+                carNo, accessPeriodBeginDt, accessPeriodEndDt
+        ).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1093,13 +1114,27 @@ public class GatewayService {
      * @param carNo 차량번호
      * @return 경고차량 여부
      */
-    private boolean isWarningCar(String carNo) {
+    private boolean isWarningCar(String carNo, InterlockRequestDto requestDto) {
+        // 경고차량 삭제 차량인지 여부 확인
+        // 결제 후 통과와 결제 후 통과가 아닌 경우를 생각해 보면
+        // 단순하게 여기서 생각할건 넘겨야할
+
+        // 삭제된 경고차량 여부
+        List<WarningCar> warningCars = warningCarRepository.findWarningCarByCarNo(carNo);
+        WarningCar warningCar = warningCars.size() > 0 ? warningCars.get(0) : null;
+        if(warningCar != null && warningCar.getRegistStatus() == 1) {
+            requestDto.setWarningCarDeleteDt(warningCar.getDeletedDt());
+        }
+        WarningCarAutoRegistRulesDto autoRegistWarningCarRulesDto = this.autoRegistWarningCar(requestDto);
+        if(autoRegistWarningCarRulesDto != null) {
+            registAutoWarningCar(requestDto, autoRegistWarningCarRulesDto);
+        }
         //        boolean warningCar = warningCarRepository.existsByCarNo(carNo);
-        boolean warningCar = warningCarRepository.findWarningCarByCarNoAndStatus(carNo).size() > 0;
-        if (warningCar) {
+        boolean warningCarResult = warningCarRepository.findWarningCarByCarNoAndStatus(carNo).size() > 0;
+        if (warningCarResult) {
             log.info("차량번호 = {} 경고 차량차량으로 출입 차단됨",carNo);
         }
-        return warningCar;
+        return warningCarResult;
     }
 
     /**
