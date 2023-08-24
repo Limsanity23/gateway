@@ -375,13 +375,14 @@ public class GatewayService {
                 }
             }
 
-            boolean isWarningCar = isWarningCar(carNo, requestDto);
+            // boolean isWarningCar = isWarningCar(carNo, requestDto);
             if (transitMode == 1) { // 획인후 통과
                 boolean isAllowPass = true;
 
-                if (isWarningCar) { // 경고 차량
-                    requestDto.setCarSection(6L);
-                } else if (registCar == null) {
+                // if (isWarningCar) { // 경고 차량
+                //     requestDto.setCarSection(6L);
+                // } else if (registCar == null) {
+                if (registCar == null) {
                     // 에약 방문 차량 조회
                     if (aptnerService.isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(systemSetup.getSiteCode(), requestDto).getAddressDong() != null) { //아파트너 연동 현장이면
                         requestDto.setCarSection(3L);
@@ -439,7 +440,10 @@ public class GatewayService {
                         isAllowPass = false;
                     }
                 }
-
+                boolean isWarningCar = isWarningCar(carNo, requestDto);
+                if (isWarningCar) { // 경고 차량
+                    requestDto.setCarSection(6L);
+                }
                 log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
@@ -503,6 +507,7 @@ public class GatewayService {
 
                 if (transitMode == 2) { // 인식후 통과
                     boolean isOperationLimit = isCarAccessLimit(requestDto, transitMode, operationLimitSetup);
+                    boolean isWarningCar = isWarningCar(carNo, requestDto);
                     if (!isOperationLimit && isWarningCar) {
                         requestDto.setCarSection(6L);
                         accessBlocked(requestDto);
