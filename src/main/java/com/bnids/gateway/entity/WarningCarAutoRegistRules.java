@@ -39,6 +39,9 @@ public class WarningCarAutoRegistRules extends AuditModel<Long> {
     @Column
     private LocalDateTime applyDt;                              //정책 적용(시행)일자
 
+    @Column
+    private Integer parkingTimeMinutes;                         //주차시간 분
+
     @Override
     public Long getId() {
         return getWarningCarAutoRegistRulesId();

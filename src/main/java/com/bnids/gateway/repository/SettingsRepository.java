@@ -39,4 +39,7 @@ public interface SettingsRepository extends BaseJPARepository<Settings, Long> {
     // 입차제한로직정의 : 1000
     @Query(value = "select * from local_db.settings where parent_setting_id = 1000 and active = 1", nativeQuery=true)
     List<Settings> findCustomRestrictLogicList();
+
+    @Query(value = "select * from local_db.settings where setting_id in (4001, 4002) and active = 1 order by setting_id", nativeQuery=true)
+    List<Settings> findEntryExitBufferTime();
 }

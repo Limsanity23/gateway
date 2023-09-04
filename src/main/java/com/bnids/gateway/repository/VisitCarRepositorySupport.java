@@ -9,6 +9,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
@@ -19,6 +20,7 @@ import java.util.List;
 import static com.bnids.gateway.entity.QVisitCar.visitCar;
 
 @Repository
+@Slf4j
 public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
 
     private final JPAQueryFactory queryFactory;
@@ -27,8 +29,8 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         this.queryFactory = queryFactory;
     }
 
-    public List<InterlockResponseDto> findVisitCarListForRegistWarningCar(WarningCarAutoRegistRulesDto rules) {
-        BooleanBuilder builder = generate(rules);
+    public List<InterlockResponseDto> findVisitCarListForRegistWarningCar(WarningCarAutoRegistRulesDto rules, boolean isRegistCar) {
+        BooleanBuilder builder = generate(rules, isRegistCar);
         final JPQLQuery<InterlockResponseDto> query;
         query = queryFactory
                 .select(Projections.bean(InterlockResponseDto.class, visitCar.visitCarId))
@@ -57,7 +59,7 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         return builder;
     }*/
 
-    public BooleanBuilder generate(WarningCarAutoRegistRulesDto dto) {
+    public BooleanBuilder generate(WarningCarAutoRegistRulesDto dto, boolean isRegistCar) {
         BooleanBuilder builder = new BooleanBuilder();
 
         builder.and(visitCar.carNo.eq(dto.getCarNo()));
@@ -88,9 +90,14 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
             //간편버튼 입차 후 방문예약 등록하여 출차하였을 때
             //visitCar 에는 carSection이 간편버튼 -> 예약방문으로 수정되지 않고 그대로 남아있으므로
             //차후 간편버튼으로 입출차시 주차시간 위반이 되면 경고차량으로 자동등록된다
-            //주차시간위반 조건에 동호 정보가 없는 경우만 계산하도록 조건 추가(방문예약으로 입출차시 동호정보를 남기게 되어있으므로)
-            builder.and(visitCar.visitDong.isNull()).and(visitCar.visitHo.isNull());
-            builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(HOUR, {0}, {1})", visitCar.entvhclDt , visitCar.lvvhclDt).goe(dto.getParkingTime()));
+            //주차시간위반 조건에 동호 정보가 없는 경우만 계산하도록 조건 추가(방문예약으로 입출차시 동호정보를 남기게 되어있으므로) - 등록차량을 경고차량으로 등록하는 케이스는 제외
+            if (!isRegistCar)  builder.and(visitCar.visitDong.isNull()).and(visitCar.visitHo.isNull());
+
+//            builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(HOUR, {0}, {1})", visitCar.entvhclDt , visitCar.lvvhclDt).goe(dto.getParkingTime()));
+
+            int totalParkingMinutes = dto.getParkingTime() * 60 + dto.getParkingTimeMinutes();
+            builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(MINUTE, {0}, {1})", visitCar.entvhclDt, visitCar.lvvhclDt)
+                    .goe(totalParkingMinutes));
         }
 
         return builder;

@@ -20,6 +20,7 @@ public class WarningCarAutoRegistRulesDto {
     private String carNo;
     private LocalDateTime deletedDt;
     private LocalDateTime applyDt;
+    private Integer parkingTimeMinutes;
 
 
     public WarningCarAutoRegistRulesDto of(WarningCarAutoRegistRules warningCarAutoRegistRules) {
@@ -30,6 +31,7 @@ public class WarningCarAutoRegistRulesDto {
                     .warinigCarRulesSection(warningCarAutoRegistRules.getWarinigCarRulesSection())
                     .registDay(warningCarAutoRegistRules.getRegistDay())
                     .applyDt(warningCarAutoRegistRules.getApplyDt())
+                .parkingTimeMinutes(warningCarAutoRegistRules.getParkingTimeMinutes())
                 .build();
     }
 }
