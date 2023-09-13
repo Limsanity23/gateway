@@ -568,9 +568,17 @@ public class GatewayService {
                     .build()
                     .of(rule);
             warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
+
+            //일반차량으로 경고차량 등록조건을 갖춘 후 등록차량이 되었을 때 경고차량으로 등록되는 케이스 대응
+            if (isRegistCar && requestDto.getCarSection() != rule.getCarSection() ) {
+                log.info("===== 등록차량{}, 카섹션: {}, 경고차량 정책의 카섹션:{} 이 달라서 패스", requestDto.getCarNo(), requestDto.getCarSection(), rule.getCarSection());
+                return null;
+            }
+
             if(requestDto.getWarningCarDeleteDt() != null) {
                 warningCarAutoRegistRules.setDeletedDt(requestDto.getWarningCarDeleteDt());
             }
+
             int violationSize = visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules, isRegistCar).size();
 
             boolean isViolation = false;
@@ -997,7 +1005,7 @@ public class GatewayService {
                             return true;
                         }
 
-                        // 제한시간
+                        // 제한시간.0
                         if (carAccessLimit.getLimitBeginTime() == null || carAccessLimit.getLimitEndTime() == null) {
                             log.info("차량번호 = {}, 통로 = {}({}) 출입제한, 미적용으로 통과됨",requestDto.getCarNo(),requestDto.getGateName(), requestDto.getGateId());
                             return false;
