@@ -2,8 +2,8 @@ package com.bnids.gateway.repository;
 
 import com.bnids.gateway.dto.InterlockResponseDto;
 import com.bnids.gateway.dto.WarningCarAutoRegistRulesDto;
-import com.bnids.gateway.entity.WarningCarRegistEnum;
 import com.bnids.gateway.entity.VisitCar;
+import com.bnids.gateway.entity.WarningCarRegistEnum;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
@@ -91,7 +91,8 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
             //visitCar 에는 carSection이 간편버튼 -> 예약방문으로 수정되지 않고 그대로 남아있으므로
             //차후 간편버튼으로 입출차시 주차시간 위반이 되면 경고차량으로 자동등록된다
             //주차시간위반 조건에 동호 정보가 없는 경우만 계산하도록 조건 추가(방문예약으로 입출차시 동호정보를 남기게 되어있으므로) - 등록차량을 경고차량으로 등록하는 케이스는 제외
-            if (!isRegistCar)  builder.and(visitCar.visitDong.isNull()).and(visitCar.visitHo.isNull());
+            //  ->20240215 추가 - 키오스크 세대방문이 정책일 경우 동호정보가 없는 조건이면 경고차량 등록이 되지 않으므로 제외시킨다
+            if (!isRegistCar && dto.getCarSection().intValue() != 4)  builder.and(visitCar.visitDong.isNull()).and(visitCar.visitHo.isNull());
 
 //            builder.and(Expressions.numberTemplate(Long.class, "timestampdiff(HOUR, {0}, {1})", visitCar.entvhclDt , visitCar.lvvhclDt).goe(dto.getParkingTime()));
 
