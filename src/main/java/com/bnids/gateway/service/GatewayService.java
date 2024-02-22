@@ -445,10 +445,18 @@ public class GatewayService {
                 if (isWarningCar) { // 경고 차량
                     requestDto.setCarSection(6L);
                 }
-                log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass: {}",carNo,gateName, gateId, isAllowPass);
+
+                //내부입차일 경우 이전 통로에서의 항목이 유지되도록 해야한다
+                if (requestDto.getGateType() == 2) { //내부입차
+                    Optional<VisitCar> visitCar = visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo());
+                    log.info("* 내부입차 visitCar에서 조회된 이전 입차의 카섹션: {}", visitCar.get().getCarSection());
+                    requestDto.setCarSection(Long.valueOf(visitCar.get().getCarSection()));
+                }
+
+                log.info("* 차량번호 = {}, 카섹션: {} 통로 = {}({}) isAllowPass: {}",carNo, requestDto.getCarSection(), gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
-                log.info("* 차량번호 = {}, 통로 = {}({}) isAllowPass2: {}",carNo,gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, , 카섹션: {} 통로 = {}({}) isAllowPass2: {}",carNo, requestDto.getCarSection(), gateName, gateId, isAllowPass);
 
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
@@ -520,10 +528,13 @@ public class GatewayService {
                             if (taxiType > 0) {
                                 requestDto.setCarSection(getLastCarSection(requestDto, (int) taxiType).longValue());
                             }
+
                         }
+                        if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
                         accessAllowed(requestDto, isGateAlreadyUp);
                     }
                 } else if (transitMode == 3) { // 무조건 통과
+                    if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
                     accessAllowed(requestDto, isGateAlreadyUp);
                 } else {
                     if(isWarningCar(carNo, requestDto, registCar != null)) {
