@@ -45,4 +45,7 @@ public interface SettingsRepository extends BaseJPARepository<Settings, Long> {
 
     @Query(value = "select * from local_db.settings where setting_id = 6000 and active = 1", nativeQuery=true)
     Optional<Settings> findExcludeInternalInOut();
+
+    @Query(value = "select * from local_db.settings where setting_id = 7000 and active = 1", nativeQuery=true)
+    Optional<Settings> findJSONSettingToForward();
 }

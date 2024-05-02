@@ -27,11 +27,18 @@ import com.bnids.exception.NotFoundException;
 import com.bnids.gateway.dto.*;
 import com.bnids.gateway.entity.*;
 import com.bnids.gateway.repository.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mysql.cj.x.protobuf.MysqlxDatatypes.Scalar.String;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.hibernate.mapping.Map;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +49,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  * @author yannishin
@@ -104,9 +114,18 @@ public class GatewayService {
 
     private final long reserveCarListCacheDuration = 600 * 1000L; //10분마다 목록 갱신
 
+    private boolean needToForward = false;
+    private String forwardUrl;
+    private HashMap<Long, Long> forwardGates = new HashMap<>();
+
     @PostConstruct
     public void init(){
         log.info("* GatewayService init *");
+        initAptner();
+    }
+
+    private void initAptner() {
+        log.info("initAptner");
         SystemSetup system = findSystemSetup();
         try {
             log.info("* 사이트코드 : {}, 아파트너 연동여부 : {}",system.getSiteCode(), aptnerService.isAptner(system.getSiteCode()));
@@ -129,6 +148,42 @@ public class GatewayService {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initMemorySettings() {
+        log.info("initMemorySettings");
+        Optional<Settings> findJSONSettingToForward = settingsRepository.findJSONSettingToForward();
+        needToForward = findJSONSettingToForward.isPresent();
+        log.info("needToForward: {}", needToForward);
+        if (!needToForward) {
+            return;
+        }
+        /*
+         JSON 구조 예시 : {
+            "url":"https://bn211105.hparking.co.kr:9443/gateway/api/gateway/interlock",
+            "gates": [ {"fromGateId": 1, "toGateId": 6},
+                       {"fromGateId": 2, "toGateId": 7}]
+         }
+         */
+        // 1. json 데이터를 파싱
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject objData = (JSONObject)parser.parse(findJSONSettingToForward.get().getValue());
+            forwardUrl = (String)objData.get("url");
+            JSONArray arrData = (JSONArray)objData.get("gates");
+            for (int i = 0; i < arrData.size(); i++) {
+                JSONObject obj = (JSONObject)arrData.get(i);
+                forwardGates.put((Long)obj.get("fromGateId"), (Long)obj.get("toGateId"));
+            }
+
+            // Now you can access the JSON data using jsonMap.
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }        
+        // 2. url 추출
+        // 3. gates 추출
+
+
     }
 
 //    public boolean checkAptnerReserve(String siteCode, String carNo){
@@ -192,6 +247,11 @@ public class GatewayService {
 
         // If the gate is already opened by LPR, return true otherwise false
         boolean isGateAlreadyUp = lprRequestDto.isGateAlreadyUp();
+
+
+        // 다른 현장으로 전달하는 경우인지 체크하고 전달하기
+        this.checkSettingsFowardAndSend(lprRequestDto);
+
 
         log.info("@@ 1 carNo: {}, carNo1: {}, carNo2: {}", carNo, carNo1, carNo2);
 
@@ -1314,9 +1374,33 @@ public class GatewayService {
     }
 
 
-
     private Integer getGateType(Integer gateId) {
         Optional<Gate> gate = gateRepository.findById(gateId.longValue());
         return gate.isPresent() ? gate.get().getGateType() : 0;
     }
+
+    private void checkSettingsFowardAndSend(InterlockRequestDto requestDto) {
+        if (!needToForward) {
+            return;
+        }
+        // 통로가 forwardGates에 있는가?
+        if (forwardGates.containsKey(requestDto.getGateId())) {
+            // forwardGates에 있는 통로라면, forward로 보낸다.
+            sendForwardServer(requestDto, forwardGates.get(requestDto.getGateId()));
+        }
+
+    }
+
+    private void sendForwardServer(InterlockRequestDto requestDto, Long toGateId) {
+        log.info("차량번호 = {}, 통로 = {}({}) 를 다른 현장 {}로 보냅니다.", requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId(), toGateId);
+        // thread를 생성하여 url로 보낸다.
+        var t = new Thread(() -> {
+            interlockService.forwardGate(requestDto, forwardUrl, toGateId);
+        });
+        // time out은 10초로 설정
+        t.start();
+
+
+    }
+
 }
