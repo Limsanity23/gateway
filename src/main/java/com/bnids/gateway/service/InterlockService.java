@@ -246,9 +246,9 @@ public class InterlockService {
     /*
      * 다른 현장으로 전달
      */
-    public void forwardGate(InterlockRequestDto dto, String url, Long toGateId) {
+    public void forwardGate(LprRequestDto dto, String url, Long toGateId) {
         Long fromGateId = dto.getGateId();
-        log.info("다른 현장으로 전달 url = {}, 차량번호 = {}, fromGateId = {}, toGateId = {}, ", url, dto.getCarNo(), fromGateId, toGateId);
+        log.info("다른 현장으로 전달 url = {}, 차량번호 = {}, fromGateId = {}, toGateId = {}, ", url, dto.getLprCarNo(), fromGateId, toGateId);
 
         dto.setGateId(toGateId);
 
@@ -260,10 +260,10 @@ public class InterlockService {
 
         forwardResponse
                 .doOnError(t -> {
-                    log.error("다른 현장으로 전달 url = {}, 차량번호 = {}, 통로 = {}({}), 실패 응답 = {}", url, dto.getCarNo(), dto.getGateName(), dto.getGateId(), t);
+                    log.error("다른 현장으로 전달 url = {}, 차량번호 = {}, 통로 = {}, 실패 응답 = {}", url, dto.getLprCarNo(), dto.getGateId(), t);
                 })
                 .subscribe(s -> {
-                    log.info("다른 현장으로 전달 url = {}, 차량번호 = {}, 통로 = {}({}), 성공 응답 = {}", url, dto.getCarNo(), dto.getGateName(), dto.getGateId(), s.getMessage());
+                    log.info("다른 현장으로 전달 url = {}, 차량번호 = {}, 통로 = {}, 성공 응답 = {}", url, dto.getLprCarNo(), dto.getGateId(), s.getMessage());
                 });
     }
 

@@ -28,7 +28,6 @@ import com.bnids.gateway.dto.*;
 import com.bnids.gateway.entity.*;
 import com.bnids.gateway.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mysql.cj.x.protobuf.MysqlxDatatypes.Scalar.String;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -49,9 +48,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  * @author yannishin
@@ -1379,7 +1375,7 @@ public class GatewayService {
         return gate.isPresent() ? gate.get().getGateType() : 0;
     }
 
-    private void checkSettingsFowardAndSend(InterlockRequestDto requestDto) {
+    private void checkSettingsFowardAndSend(LprRequestDto requestDto) {
         if (!needToForward) {
             return;
         }
@@ -1391,8 +1387,8 @@ public class GatewayService {
 
     }
 
-    private void sendForwardServer(InterlockRequestDto requestDto, Long toGateId) {
-        log.info("차량번호 = {}, 통로 = {}({}) 를 다른 현장 {}로 보냅니다.", requestDto.getCarNo(), requestDto.getGateName(), requestDto.getGateId(), toGateId);
+    private void sendForwardServer(LprRequestDto requestDto, Long toGateId) {
+        log.info("차량번호 = ({}, {}), 통로 = {}({}) 를 다른 현장 {}로 보냅니다.", requestDto.getLprCarNo(), requestDto.getLprCarNo2(), requestDto.getGateId(), toGateId);
         // thread를 생성하여 url로 보낸다.
         var t = new Thread(() -> {
             interlockService.forwardGate(requestDto, forwardUrl, toGateId);
