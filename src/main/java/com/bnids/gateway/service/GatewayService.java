@@ -118,6 +118,7 @@ public class GatewayService {
     public void init(){
         log.info("* GatewayService init *");
         initAptner();
+        initMemorySettings();
     }
 
     private void initAptner() {
