@@ -1,6 +1,7 @@
 package com.bnids.gateway.repository;
 
 import com.bnids.gateway.dto.InterlockResponseDto;
+import com.bnids.gateway.dto.VisitCarDto;
 import com.bnids.gateway.dto.WarningCarAutoRegistRulesDto;
 import com.bnids.gateway.entity.VisitCar;
 import com.bnids.gateway.entity.WarningCarRegistEnum;
@@ -29,7 +30,7 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         this.queryFactory = queryFactory;
     }
 
-    public List<InterlockResponseDto> findVisitCarListForRegistWarningCar(WarningCarAutoRegistRulesDto rules, boolean isRegistCar) {
+    /*public List<InterlockResponseDto> findVisitCarListForRegistWarningCar(WarningCarAutoRegistRulesDto rules, boolean isRegistCar) {
         BooleanBuilder builder = generate(rules, isRegistCar);
         final JPQLQuery<InterlockResponseDto> query;
         query = queryFactory
@@ -37,6 +38,18 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
                 .from(visitCar)
                 .where(builder);
         final List<InterlockResponseDto> visitCars = getQuerydsl().applySorting(Sort.by(Sort.Direction.DESC, "visitCarId"), query).fetch();
+        return visitCars;
+    }*/
+
+    public List<VisitCarDto> findVisitCarListForRegistWarningCar(WarningCarAutoRegistRulesDto rules, boolean isRegistCar) {
+        BooleanBuilder builder = generate(rules, isRegistCar);
+        final JPQLQuery<VisitCarDto> query;
+        query = queryFactory
+                .select(Projections.bean(VisitCarDto.class, visitCar.visitCarId, visitCar.entranceGateId, visitCar.entvhclDt, visitCar.exitGateId, visitCar.lvvhclDt ))
+                .from(visitCar)
+                .where(builder);
+        final List<VisitCarDto> visitCars = getQuerydsl().applySorting(Sort.by(Sort.Direction.DESC, "visitCarId"), query).fetch();
+
         return visitCars;
     }
 
@@ -103,5 +116,7 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
 
         return builder;
     }
+
+
 
 }

@@ -36,10 +36,12 @@ import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author yannishin
@@ -303,26 +305,32 @@ public class GatewayService {
                     requestDto.setCarSection(1L);
                     interlockService.sendSignageServer(requestDto);
                 } else {
-                    //앱 방문차량인 경우 로컬에서 게이트웨이에서 보내준 파라미터의 carSection을 기준으로 푸시전송여부를 판별하므로
-                    //여기서 앱방문차량인지 확인 후 carSection 셋팅하도록 한다
-//                    requestDto.setCarSection(2L);
-                    AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
-                    Reservation reservation = this.findReservationCar(carNo);
-                    if (appVisitCar == null && reservation == null) {
-                        if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
-                        else requestDto.setCarSection(2L);
+                    boolean isWarningCar = isWarningCar(carNo, requestDto, false);
+                    log.info("* 결제통과 통로에서 경고차량 여부 = {}", isWarningCar);
+                    if (isWarningCar) { // 경고 차량
+                        requestDto.setCarSection(6L);
                     } else {
+                        //앱 방문차량인 경우 로컬에서 게이트웨이에서 보내준 파라미터의 carSection을 기준으로 푸시전송여부를 판별하므로
+                        //여기서 앱방문차량인지 확인 후 carSection 셋팅하도록 한다
+//                    requestDto.setCarSection(2L);
+                        AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
+                        Reservation reservation = this.findReservationCar(carNo);
+                        if (appVisitCar == null && reservation == null) {
+                            if(getEmergenyType(carNo))  requestDto.setCarSection(13L);
+                            else requestDto.setCarSection(2L);
+                        } else {
 //                        requestDto.setCarSection(3L);\
-                        if (appVisitCar != null) {
-                            requestDto.setBy(appVisitCar);
-                        }
-                        if (reservation != null) {
-                            requestDto.setByReservation(reservation);
-                        }
+                            if (appVisitCar != null) {
+                                requestDto.setBy(appVisitCar);
+                            }
+                            if (reservation != null) {
+                                requestDto.setByReservation(reservation);
+                            }
 
+                        }
+                        log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
+                        this.processAfterPayment(requestDto, isGateAlreadyUp);
                     }
-                    log.info("차량번호: {},  미등록 차량, carSection : {}", requestDto.getCarNo(), requestDto.getCarSection());
-                    this.processAfterPayment(requestDto, isGateAlreadyUp);
                 }
 
             } else {
@@ -379,9 +387,6 @@ public class GatewayService {
             if (transitMode == 1) { // 획인후 통과
                 boolean isAllowPass = true;
 
-                // if (isWarningCar) { // 경고 차량
-                //     requestDto.setCarSection(6L);
-                // } else if (registCar == null) {
                 if (registCar == null) {
                     // 에약 방문 차량 조회
                     if (aptnerService.isAptner(systemSetup.getSiteCode()) && checkAptnerReserve(systemSetup.getSiteCode(), requestDto).getAddressDong() != null) { //아파트너 연동 현장이면
@@ -449,8 +454,10 @@ public class GatewayService {
                 //내부입차일 경우 이전 통로에서의 항목이 유지되도록 해야한다
                 if (requestDto.getGateType() == 2) { //내부입차
                     Optional<VisitCar> visitCar = visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo());
-                    log.info("* 내부입차 visitCar에서 조회된 이전 입차의 카섹션: {}", visitCar.get().getCarSection());
-                    requestDto.setCarSection(Long.valueOf(visitCar.get().getCarSection()));
+                    if ( visitCar.isPresent() ) {
+                        log.info("* 내부입차 visitCar에서 조회된 이전 입차의 카섹션: {}", visitCar.get().getCarSection());
+                        requestDto.setCarSection(Long.valueOf(visitCar.get().getCarSection()));
+                    }
                 }
 
                 log.info("* 차량번호 = {}, 카섹션: {} 통로 = {}({}) isAllowPass: {}",carNo, requestDto.getCarSection(), gateName, gateId, isAllowPass);
@@ -569,50 +576,16 @@ public class GatewayService {
         warningCarRepository.save(create.toEntity());
     }
 
-    public WarningCarAutoRegistRulesDto autoRegistWarningCar(InterlockRequestDto requestDto, boolean isRegistCar) {
-//        List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findByCarSection(requestDto.getCarSection());
-        //로직수정 : 카섹션을 기준으로 정책을 조회하던 로직에서...  전체 정책 조회 후 각 정책에 해당하는 위반이력이 확인되면 등록하는 것으로 변경
-        List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findRules();
-        for(WarningCarAutoRegistRules rule : rules) {
-            WarningCarAutoRegistRulesDto warningCarAutoRegistRules = WarningCarAutoRegistRulesDto
-                    .builder()
-                    .build()
-                    .of(rule);
-            warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
-
-            //일반차량으로 경고차량 등록조건을 갖춘 후 등록차량이 되었을 때 경고차량으로 등록되는 케이스 대응
-            if (isRegistCar && requestDto.getCarSection() != rule.getCarSection() ) {
-                log.info("===== 등록차량{}, 카섹션: {}, 경고차량 정책의 카섹션:{} 이 달라서 패스", requestDto.getCarNo(), requestDto.getCarSection(), rule.getCarSection());
-                return null;
-            }
-
-            if(requestDto.getWarningCarDeleteDt() != null) {
-                warningCarAutoRegistRules.setDeletedDt(requestDto.getWarningCarDeleteDt());
-            }
-
-            int violationSize = visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules, isRegistCar).size();
-
-            boolean isViolation = false;
-//            if(visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules).size() >= rule.getViolationTime()) {
-            if (rule.getWarinigCarRulesSection() == WarningCarRegistEnum.NUMBER_ACCESS_VIOLATION) {
-                if (requestDto.getGateType() == 1 || requestDto.getGateType() == 2) {
-                    isViolation = violationSize >= rule.getViolationTime();
-                }
-            } else {
-                isViolation = violationSize >= rule.getViolationTime();
-            }
-            log.info("===== 카섹션: {}, 게이트타입: {}, visitCar 조회결과 건수:{}, 위반기준회수: {}, 위반여부:{}", rule.getCarSection(), requestDto.getGateType(), violationSize, rule.getViolationTime(), isViolation);
-
-            if(isViolation) {
-                return warningCarAutoRegistRules;
-            }
-        }
-        return null;
-    }
 
     public void processAfterPayment(InterlockRequestDto requestDto, boolean isGateAlreadyUp) {
+        log.info("# processAfterPayment > isPaymentSuccess: {}, 카섹션: {}", requestDto.isPaymentSuccess(), requestDto.getCarSection());
         if (requestDto.isPaymentSuccess() || isGateAlreadyUp) {
-            accessAllowed(requestDto, isGateAlreadyUp);
+            if ( requestDto.getCarSection() == 6 ) {
+                log.info("# processAfterPayment > isPaymentSuccess는 true 이나 대상차량이 경고차량임 #");
+                accessBlocked(requestDto);
+            } else {
+                accessAllowed(requestDto, isGateAlreadyUp);
+            }
         } else {
             if(requestDto.getGatePaymentType() == 1) {
                 interlockService.sendUnmannedPaymentServer(requestDto);
@@ -1237,5 +1210,113 @@ public class GatewayService {
             isEmergencyType = true;
         }
         return isEmergencyType;
+    }
+
+    public WarningCarAutoRegistRulesDto autoRegistWarningCar(InterlockRequestDto requestDto, boolean isRegistCar) {
+        log.info("===== autoRegistWarningCar > 차량번호:{}, 통로번호: {}", requestDto.getCarNo(), requestDto.getGateId());
+        //로직수정 : 카섹션을 기준으로 정책을 조회하던 로직에서...  전체 정책 조회 후 각 정책에 해당하는 위반이력이 확인되면 등록하는 것으로 변경
+        List<WarningCarAutoRegistRules> rules = warningCarAutoRegistRulesRepository.findRules();
+        Optional<Settings> inoutExcludeSettings = settingsRepository.findExcludeInternalInOut();
+
+        for(WarningCarAutoRegistRules rule : rules) {
+            WarningCarAutoRegistRulesDto warningCarAutoRegistRules = WarningCarAutoRegistRulesDto
+                    .builder()
+                    .build()
+                    .of(rule);
+            warningCarAutoRegistRules.setCarNo(requestDto.getCarNo());
+
+            log.info("===== 룰정보 > {}", rule.getWarningCarAutoRegistRulesId());
+
+            //일반차량으로 경고차량 등록조건을 갖춘 후 등록차량이 되었을 때 경고차량으로 등록되는 케이스 대응
+            if (isRegistCar && requestDto.getCarSection() != rule.getCarSection() ) {
+                log.info("===== 등록차량{}, 카섹션: {}, 경고차량 정책의 카섹션:{} 이 달라서 패스", requestDto.getCarNo(), requestDto.getCarSection(), rule.getCarSection());
+                return null;
+            }
+
+            if(requestDto.getWarningCarDeleteDt() != null) {
+                warningCarAutoRegistRules.setDeletedDt(requestDto.getWarningCarDeleteDt());
+            }
+            List<VisitCarDto> visitCarList = visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules, isRegistCar);
+
+            visitCarList.sort((v1, v2) -> Long.compare(v2.getVisitCarId(), v1.getVisitCarId()));
+
+            int violationCount = 0;
+            boolean isInoutExclude = inoutExcludeSettings.isPresent();
+
+            log.info(">>> 내부입출차시간 제외 설정값 존재여부: {}-{}, 조회된 visitCar size: {} <<<", isInoutExclude, inoutExcludeSettings.get().getValue(), visitCarList.size());
+            if (isInoutExclude && inoutExcludeSettings.get().getValue().equals("Y")) {
+                log.info(">>> 내부 입출차는 제외하고 계산합니다 조회된 visitCar size: {} <<<", visitCarList.size());
+
+                for (VisitCarDto visitCar : visitCarList) {
+                    // 내부 입출차 데이터인 경우만 처리
+                    if (visitCar.getEntranceGateId() != 0 && getGateType(visitCar.getEntranceGateId()) == 2
+                            && visitCar.getExitGateId() != null && getGateType(visitCar.getExitGateId()) == 4) {
+
+                        // 해당 내부 입출차에 매칭되는 외부 입출차 데이터 찾기
+                        VisitCarDto matchedOuterVisit = visitCarList.stream()
+                                .filter(v -> v.getEntranceGateId() != 0 && getGateType(v.getEntranceGateId()) == 1
+                                        && v.getExitGateId() != null && getGateType(v.getExitGateId()) == 3
+                                        && v.getEntvhclDt().isBefore(visitCar.getEntvhclDt()) // 외부 입차 시간이 내부 입차 시간보다 이전이어야 함
+                                        && v.getLvvhclDt().isAfter(visitCar.getLvvhclDt())) // 외부 출차 시간이 내부 출차 시간보다 이후여야 함
+                                .findFirst()
+                                .orElse(null);
+
+                        if (matchedOuterVisit != null) {
+                            log.info(">>> 내부 입출차에 매치되는 외부입출차가 있!어요 <<< ");
+                            LocalDateTime outerEntryTime = matchedOuterVisit.getEntvhclDt();
+                            LocalDateTime outerExitTime = matchedOuterVisit.getLvvhclDt();
+                            LocalDateTime innerEntryTime = visitCar.getEntvhclDt();
+                            LocalDateTime innerExitTime = visitCar.getLvvhclDt();
+                            log.info(">>> ({})외부입차시간: {}, ({})내부입차시간: {}, 내부출차시간: {}, 외부출차시간: {}", matchedOuterVisit.getVisitCarId(), outerEntryTime, visitCar.getVisitCarId(),  innerEntryTime, innerExitTime, outerExitTime);
+
+                            Duration outerParkingDuration = Duration.between(outerEntryTime, outerExitTime); //외부입출차 기준 주차시간
+                            Duration innerParkingDuration = Duration.between(innerEntryTime, innerExitTime); //내부입출차 기준 주차시간
+                            Duration netParkingDuration = outerParkingDuration.minus(innerParkingDuration); // 외부입출차 - 내부입출차
+
+                            long netParkingMinutes = netParkingDuration.toMinutes();
+                            long violationTimeMinutes = rule.getParkingTimeMinutes() + (rule.getParkingTime() * 60);
+
+                            log.info(">>> 외부입출차 주차시간: {}, 내부입출차 주차시간: {}, 위반기준시간(분): {}, 순수 주차시간(분): {}", outerParkingDuration.toMinutes(), innerParkingDuration.toMinutes(), violationTimeMinutes, netParkingMinutes);
+
+                            if (netParkingMinutes >= violationTimeMinutes) {
+                                violationCount++;
+                                log.info(">>> 주차시간 위반 발생 (현재 누적 위반 횟수: {})", violationCount);
+                            }
+                        } else {
+                            log.info(">>> 내부 입출차에 매치되는 외부입출차가 없!어요 <<< ");
+                        }
+                    }
+                }
+            } else {
+                log.info(">>> 내부 입출차를 포함하여 계산합니다 <<<");
+                violationCount = visitCarList.size();
+            }
+
+            boolean isViolation = false;
+
+            log.info(">>> 누적 위반 횟수: {}", violationCount);
+
+            if (rule.getWarinigCarRulesSection() == WarningCarRegistEnum.NUMBER_ACCESS_VIOLATION) {
+                log.info("############### 횟수 위반 체크 ################");
+                if (requestDto.getGateType() == 1 || requestDto.getGateType() == 2) {
+                    isViolation = violationCount >= rule.getViolationTime();
+                }
+            } else {
+                log.info("############### 시간 위반 체크 ################");
+                isViolation = violationCount >= rule.getViolationTime();
+            }
+            log.info("===== 차량번호: {}, 등록항목: {}, 위반기준회수: {}, 위반횟수:{}, 위반여부:{}", requestDto.getCarNo(), rule.getCarSection(), rule.getViolationTime(), violationCount, isViolation);
+            if(isViolation) {
+                return warningCarAutoRegistRules;
+            }
+        }
+        return null;
+    }
+
+
+
+    private Integer getGateType(Integer gateId) {
+        Optional<Gate> gate = gateRepository.findById(gateId.longValue());
+        return gate.isPresent() ? gate.get().getGateType() : 0;
     }
 }

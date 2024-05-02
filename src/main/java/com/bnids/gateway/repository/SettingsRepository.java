@@ -42,4 +42,7 @@ public interface SettingsRepository extends BaseJPARepository<Settings, Long> {
 
     @Query(value = "select * from local_db.settings where setting_id in (4001, 4002) and active = 1 order by setting_id", nativeQuery=true)
     List<Settings> findEntryExitBufferTime();
+
+    @Query(value = "select * from local_db.settings where setting_id = 6000 and active = 1", nativeQuery=true)
+    Optional<Settings> findExcludeInternalInOut();
 }
