@@ -1294,14 +1294,15 @@ public class GatewayService {
                 warningCarAutoRegistRules.setDeletedDt(requestDto.getWarningCarDeleteDt());
             }
             List<VisitCarDto> visitCarList = visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules, isRegistCar);
-
-            visitCarList.sort((v1, v2) -> Long.compare(v2.getVisitCarId(), v1.getVisitCarId()));
-
             int violationCount = 0;
+            if (visitCarList.size() > 0) {
+                visitCarList.sort((v1, v2) -> Long.compare(v2.getVisitCarId(), v1.getVisitCarId()));
+            }
+
             boolean isInoutExclude = inoutExcludeSettings.isPresent();
 
-            log.info(">>> 내부입출차시간 제외 설정값 존재여부: {}-{}, 조회된 visitCar size: {} <<<", isInoutExclude, inoutExcludeSettings.get().getValue(), visitCarList.size());
-            if (isInoutExclude && inoutExcludeSettings.get().getValue().equals("Y")) {
+            log.info(">>> 내부입출차시간 제외 설정값 존재여부: {}, 조회된 visitCar size: {} <<<", isInoutExclude, visitCarList.size());
+            if (visitCarList.size() > 0 && isInoutExclude && inoutExcludeSettings.get().getValue().equals("Y")) {
                 log.info(">>> 내부 입출차는 제외하고 계산합니다 조회된 visitCar size: {} <<<", visitCarList.size());
 
                 for (VisitCarDto visitCar : visitCarList) {
