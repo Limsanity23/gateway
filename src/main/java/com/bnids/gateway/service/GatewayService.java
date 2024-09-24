@@ -495,15 +495,16 @@ public class GatewayService {
                         }
                     }
                 } else { //registCar != null
-                    log.info("차량번호 = {}, * 등록차량 *", carNo);
+                    log.info("@ 차량번호 = {}(등록차량) requestDto 찍기: {}", carNo, requestDto.toString());
                     requestDto.setBy(registCar);
 
                     if(isRestrictedCar(requestDto)) {
                         isAllowPass = false;
                     }
                 }
+                log.info("* ({})경고차량 여부 체크 전 carsection 확인: {}", requestDto.getCarNo(), requestDto.getCarSection());
                 boolean isWarningCar = isWarningCar(carNo, requestDto, registCar != null);
-                log.info("* 경고차량 여부 = {}", isWarningCar);
+                log.info("* 경고차량 여부 체크 = {}, carsection = {}", isWarningCar, requestDto.getCarSection());
                 if (isWarningCar) { // 경고 차량
                     requestDto.setCarSection(6L);
                 }
@@ -517,10 +518,10 @@ public class GatewayService {
                     }
                 }
 
-                log.info("* 차량번호 = {}, 카섹션: {} 통로 = {}({}) isAllowPass: {}",carNo, requestDto.getCarSection(), gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, req차량번호 = {}, 카섹션: {} 통로 = {}({}) isAllowPass: {}",carNo, requestDto.getCarNo(), requestDto.getCarSection(), gateName, gateId, isAllowPass);
 
                 isAllowPass = isAllowPass && isAllowPass(requestDto, transitMode, operationLimitSetup);
-                log.info("* 차량번호 = {}, , 카섹션: {} 통로 = {}({}) isAllowPass2: {}",carNo, requestDto.getCarSection(), gateName, gateId, isAllowPass);
+                log.info("* 차량번호 = {}, , req차량번호 = {}, 카섹션: {} 통로 = {}({}) isAllowPass2: {}",carNo, requestDto.getCarNo(), requestDto.getCarSection(), gateName, gateId, isAllowPass);
 
                 if (isAllowPass) {
                     log.info("제한된 차량 조회 carSection1: {}",requestDto.getCarSection());
@@ -550,6 +551,8 @@ public class GatewayService {
                             accessBlocked(requestDto);
                         }
                     } else {
+                        log.info("@ 출입차단 > 차량번호(carNo): {}, 리퀘스트 차량번호: {}", carNo, requestDto.getCarNo());
+                        log.info("@ 출입차단 request 찍기: ", requestDto.toString());
                         accessBlocked(requestDto);
                     }
                 }
@@ -862,6 +865,7 @@ public class GatewayService {
      * @return
      */
     private boolean isRestrictedCar(InterlockRequestDto requestDto) {
+        log.info("@ 출차제한 허용 여부 조회 > request 차량번호: {}", requestDto.getCarNo());
         return visitCarRepository.findTopByCarNoAndLvvhclDtIsNullOrderByEntvhclDtDesc(requestDto.getCarNo())
                 .map(visitCar -> {
                     if( requestDto.getGateType() == 3
@@ -1246,7 +1250,7 @@ public class GatewayService {
                 taxiType = 7L;
             } else if (region >= 70 && region < 80) {
                 taxiType = 8L;
-            } else if (region >= 80 && region < 99) {
+            } else if (region >= 80 && region <= 99) {
                 taxiType = 9L;
             }
         }
@@ -1295,9 +1299,6 @@ public class GatewayService {
             }
             List<VisitCarDto> visitCarList = visitCarRepositorySupport.findVisitCarListForRegistWarningCar(warningCarAutoRegistRules, isRegistCar);
             int violationCount = 0;
-            if (visitCarList.size() > 0) {
-                visitCarList.sort((v1, v2) -> Long.compare(v2.getVisitCarId(), v1.getVisitCarId()));
-            }
 
             boolean isInoutExclude = inoutExcludeSettings.isPresent();
 
