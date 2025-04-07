@@ -804,7 +804,7 @@ public class GatewayService {
         return reservationRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(carNo, today.plusHours(1), today.minusHours(1)).stream()
                 .findFirst().orElse(null);
     }*/
-    private Reservation findReservationCar(String carNo) {
+    /*private Reservation findReservationCar(String carNo) {
         List<Settings> timeList = settingsRepository.findEntryExitBufferTime();
         int entryBufferTime = 60; // 방문예약차량 입차 시 기본 여유시간
         int exitBufferTime = 60; // 방문예약차량 출차 시 기본 여유시간
@@ -821,6 +821,64 @@ public class GatewayService {
         return reservationRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(
                 carNo, accessPeriodBeginDt, accessPeriodEndDt
         ).stream().findFirst().orElse(null);
+    }*/
+
+    private Reservation findReservationCar(String carNo) {
+        log.info("### 방문예약 차량 조회 시작: {}", carNo);
+
+        List<Settings> timeList = settingsRepository.findEntryExitBufferTime();
+        int entryBufferTime = 60; // 방문예약차량 입차 시 기본 여유시간
+        int exitBufferTime = 60; // 방문예약차량 출차 시 기본 여유시간
+
+        if (timeList.size() >= 2) {
+            entryBufferTime = Integer.parseInt(timeList.get(0).getValue());
+            exitBufferTime = Integer.parseInt(timeList.get(1).getValue());
+        }
+
+        log.info("### 버퍼 시간 설정: 입차={}, 출차={}", entryBufferTime, exitBufferTime);
+
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime accessPeriodBeginDt = today.plusMinutes(entryBufferTime);
+        LocalDateTime accessPeriodEndDt = today.minusMinutes(exitBufferTime);
+
+        log.info("### 계산된 접근 허용 시간 범위: {} - {}", accessPeriodBeginDt, accessPeriodEndDt);
+
+        // 모든 유효한 예약 조회 (시간 미지정 + 일반 예약)
+        List<Reservation> allReservations = reservationRepository.findByVisitCarNoAndAccessPeriodBeginDtBeforeAndAccessPeriodEndDtAfter(
+                carNo, accessPeriodBeginDt, accessPeriodEndDt);
+
+        log.info("### 모든 예약 조회 결과: {} 건", allReservations.size());
+
+        // 예약들 중에서 visit_car_id가 null인 시간 미지정 예약을 우선적으로 찾음
+        LocalDateTime unlimitedStartDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+        LocalDateTime unlimitedEndDate = LocalDateTime.of(2100, 1, 1, 0, 0, 0);
+
+        Optional<Reservation> unusedUnlimitedReservation = allReservations.stream()
+                .filter(r -> r.getAccessPeriodBeginDt().equals(unlimitedStartDate) &&
+                        r.getAccessPeriodEndDt().equals(unlimitedEndDate) &&
+                        r.getVisitCarId() == null)
+                .findFirst();
+
+        if (unusedUnlimitedReservation.isPresent()) {
+            Reservation res = unusedUnlimitedReservation.get();
+            log.info("### 사용 가능한 시간 미지정 예약 발견: id={}", res.getReservationId());
+            return res;
+        }
+
+        // 시간 미지정 예약이 없는 경우, 일반 시간 지정 예약 중에서 찾음
+        Optional<Reservation> normalReservation = allReservations.stream()
+                .filter(r -> !(r.getAccessPeriodBeginDt().equals(unlimitedStartDate) &&
+                        r.getAccessPeriodEndDt().equals(unlimitedEndDate)))
+                .findFirst();
+
+        if (normalReservation.isPresent()) {
+            Reservation res = normalReservation.get();
+            log.info("### 일반 시간 지정 예약 발견: id={}, visit_car_id={}", res.getReservationId(), res.getVisitCarId());
+            return res;
+        }
+
+        log.info("### 차량 {} 에 대한 유효한 예약 없음", carNo);
+        return null;
     }
 
     /**
