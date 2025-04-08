@@ -45,7 +45,7 @@ public class VisitCarRepositorySupport extends QuerydslRepositorySupport {
         BooleanBuilder builder = generate(rules, isRegistCar);
         final JPQLQuery<VisitCarDto> query;
         query = queryFactory
-                .select(Projections.bean(VisitCarDto.class, visitCar.visitCarId, visitCar.entranceGateId, visitCar.entvhclDt, visitCar.exitGateId, visitCar.lvvhclDt ))
+                .select(Projections.bean(VisitCarDto.class, visitCar.visitCarId, visitCar.entranceGateId, visitCar.entvhclDt, visitCar.exitGateId, visitCar.lvvhclDt, visitCar.carNo, visitCar.carSection ))
                 .from(visitCar)
                 .where(builder);
         final List<VisitCarDto> visitCars = getQuerydsl().applySorting(Sort.by(Sort.Direction.DESC, "visitCarId"), query).fetch();

@@ -39,5 +39,7 @@ public class VisitCarDto {
     private LocalDateTime entvhclDt;
     private Integer exitGateId;
     private LocalDateTime lvvhclDt;
+    private String carNo;
+    private Integer carSection;
 
 }

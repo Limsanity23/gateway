@@ -21,7 +21,7 @@ public class WarningCarAutoRegistRulesDto {
     private LocalDateTime deletedDt;
     private LocalDateTime applyDt;
     private Integer parkingTimeMinutes;
-
+    private Integer actualViolationCount;
 
     public WarningCarAutoRegistRulesDto of(WarningCarAutoRegistRules warningCarAutoRegistRules) {
         return WarningCarAutoRegistRulesDto.builder()
@@ -31,7 +31,24 @@ public class WarningCarAutoRegistRulesDto {
                     .warinigCarRulesSection(warningCarAutoRegistRules.getWarinigCarRulesSection())
                     .registDay(warningCarAutoRegistRules.getRegistDay())
                     .applyDt(warningCarAutoRegistRules.getApplyDt())
+                .parkingTime(warningCarAutoRegistRules.getParkingTime())
                 .parkingTimeMinutes(warningCarAutoRegistRules.getParkingTimeMinutes())
                 .build();
+    }
+
+    @Override
+    public String toString() {
+        return "WarningCarAutoRegistRulesDto{" +
+                "carSection=" + carSection +
+                ", registDay=" + registDay +
+                ", parkingTime=" + parkingTime +
+                ", violationTime=" + violationTime +
+                ", warinigCarRulesSection=" + warinigCarRulesSection +
+                ", carNo='" + carNo + '\'' +
+                ", deletedDt=" + deletedDt +
+                ", applyDt=" + applyDt +
+                ", parkingTimeMinutes=" + parkingTimeMinutes +
+                ", actualViolationCount=" + actualViolationCount +
+                '}';
     }
 }

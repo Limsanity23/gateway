@@ -13,7 +13,8 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @Builder
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+//@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class VisitCar extends BaseEntity<Long> {
 
