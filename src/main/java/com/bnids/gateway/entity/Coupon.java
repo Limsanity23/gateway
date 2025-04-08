@@ -1,7 +1,6 @@
 package com.bnids.gateway.entity;
 
 import com.bnids.core.base.AuditModel;
-import com.bnids.gateway.enums.CouponType;
 import lombok.*;
 
 import javax.persistence.*;
