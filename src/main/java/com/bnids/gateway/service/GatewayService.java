@@ -460,7 +460,7 @@ public class GatewayService {
                     } else {
                         AppVisitCar appVisitCar = this.findAppVisitCar(carNo);
                         Reservation reservation = this.findReservationCar(carNo);
-                        log.info("* AppVisitCarId: {},  ReservationId: {} ", appVisitCar.getAppVisitCarId(), reservation.getReservationId());
+//                        log.info("* AppVisitCarId: {},  ReservationId: {} ", appVisitCar.getAppVisitCarId(), reservation.getReservationId());
                         if (appVisitCar == null && reservation == null) {
                             log.info("* AppVisitCar 와 Reservation 모두 내역이 없음");
                             // 오인식 된 번호판 정보 => 부분일치, 임시로직 에 부합되는 등록 차량인지 판별, visit_car에도 기록
