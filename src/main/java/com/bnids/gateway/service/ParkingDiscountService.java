@@ -38,6 +38,12 @@ public class ParkingDiscountService {
     }
 
     private int getCouponDiscountMinutes(Long visitCarId) {
+
+        if (visitCarId == null) {
+            log.warn("[할인권 계산] visitCarId가 null이므로 할인권 조회를 생략합니다.");
+            return 0;
+        }
+
         List<PublishedCoupon> usedCoupons = publishedCouponRepository.findUsedCouponsByVisitCarId(visitCarId);
         return usedCoupons.stream()
                 .map(PublishedCoupon::getCoupon)
