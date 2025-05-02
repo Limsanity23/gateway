@@ -1469,11 +1469,12 @@ public class GatewayService {
         Duration innerParkingDuration = Duration.between(innerVisit.getEntvhclDt(), innerVisit.getLvvhclDt());
         long parkingMinutes = outerParkingDuration.minus(innerParkingDuration).toMinutes();
 
-        log.info("[매칭입출차 - 주차시간계산] 차량번호: {}, 외부주차시간: {}분, 내부주차시간: {}분, 실제주차시간: {}분",
+        log.info("매칭입출차 - 주차시간계산] 차량번호: {}, 외부주차시간: {}분, 내부주차시간: {}분, 실제주차시간: {}분, isPaymentEnabled: {}",
                 outerVisit.getCarNo(),
                 outerParkingDuration.toMinutes(),
                 innerParkingDuration.toMinutes(),
-                parkingMinutes);
+                parkingMinutes,
+                isPaymentEnabled);
 
         if (isPaymentEnabled) {
 
@@ -1499,8 +1500,8 @@ public class GatewayService {
     }
     private int processSingleVisit(VisitCarDto visitCar, boolean isPaymentEnabled,
                                    WarningCarAutoRegistRules rule, int violationCount) {
-        log.info("[단일입출차 처리 시작] 차량번호: {}, 입차시간: {}, 출차시간: {}",
-                visitCar.getCarNo(), visitCar.getEntvhclDt(), visitCar.getLvvhclDt());
+        log.info("[단일입출차 처리 시작] 차량번호: {}, 입차시간: {}, 출차시간: {}, 결제사용여부: {}",
+                visitCar.getCarNo(), visitCar.getEntvhclDt(), visitCar.getLvvhclDt(), isPaymentEnabled);
 
         Duration parkingDuration = Duration.between(visitCar.getEntvhclDt(), visitCar.getLvvhclDt());
         long parkingMinutes = parkingDuration.toMinutes();
@@ -1516,7 +1517,10 @@ public class GatewayService {
                     visitCar.getCarNo(), discountMinutes, parkingMinutes, wasSimpleEntryButton ? "Y" : "N");
         }
 
-        long violationTimeMinutes = rule.getParkingTimeMinutes() + (rule.getParkingTime() * 60);
+        long violationTimeMinutes =
+                Optional.ofNullable(rule.getParkingTimeMinutes()).orElse(0) +
+                        Optional.ofNullable(rule.getParkingTime()).orElse(0) * 60;
+
         if (parkingMinutes >= violationTimeMinutes) {
             violationCount++;
             log.info("[단일입출차 - 위반확인] 차량번호: {}, 최종주차시간: {}분, 제한시간: {}분 => 위반(위반횟수: {})",
